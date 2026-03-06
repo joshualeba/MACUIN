@@ -1,0 +1,290 @@
+{% extends "admin_layout.html" %}
+
+{% block title %}Reporte de clientes - MACUIN Admin{% endblock %}
+
+{% block breadcrumb_active %}Reportes / Clientes{% endblock %}
+
+{% block admin_css %}
+<style>
+    .report-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        border: 1px solid var(--border);
+    }
+
+    body.dark-mode .report-card {
+        background: var(--card-bg);
+    }
+
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-mini-card {
+        padding: 1.5rem;
+        border-radius: 16px;
+        background: #F8FAFC;
+        border: 1px solid var(--border);
+    }
+
+    body.dark-mode .stat-mini-card {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .stat-mini-card h4 {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-mini-card .val {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        text-align: left;
+        padding: 1.2rem 1rem;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border);
+    }
+
+    td {
+        padding: 1.2rem 1rem;
+        font-size: 0.9rem;
+        color: var(--text-main);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .client-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .client-info .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: var(--accent-light);
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.75rem;
+    }
+
+    .status-pill {
+        padding: 0.35rem 0.75rem;
+        border-radius: 99px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .status-pill.active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+    }
+
+    .btn-download {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .btn-download:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(10, 10, 31, 0.2);
+    }
+
+    .filter-area {
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 1rem;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 0.75rem 1.2rem;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #F9FBFF;
+        outline: none;
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="report-card gsap-card">
+    <div class="report-header">
+        <div>
+            <h2 style="margin: 0; font-size: 1.5rem;">Reporte de clientes</h2>
+            <p style="color: var(--text-muted); margin-top: 0.25rem;">Análisis detallado de actividad y consumo.</p>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-mini-card">
+            <h4>Total clientes</h4>
+            <div class="val">4</div>
+        </div>
+        <div class="stat-mini-card">
+            <h4>Nuevos (Mes)</h4>
+            <div class="val">1</div>
+        </div>
+        <div class="stat-mini-card">
+            <h4>Tickets promedio</h4>
+            <div class="val">$11,162.50</div>
+        </div>
+        <div class="stat-mini-card">
+            <h4>Clientes activos</h4>
+            <div class="val">100%</div>
+        </div>
+    </div>
+
+    <div class="filter-area">
+        <input type="text" class="search-input" placeholder="Buscar por nombre, correo o ciudad..."
+            oninput="filterTable(this.value)">
+    </div>
+
+    <div class="table-container">
+        <table id="clientsTable">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Ciudad / Estado</th>
+                    <th>Pedidos</th>
+                    <th>Total gastado</th>
+                    <th>Estado</th>
+                    <th>Última actividad</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="client-info">
+                            <div class="avatar">RN</div>
+                            <div>
+                                <strong>Ronaldo Nazario</strong><br>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">ronaldo@gmail.com</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>México, CDMX</td>
+                    <td>12</td>
+                    <td><strong>$24,500.00</strong></td>
+                    <td><span class="status-pill active">Activo</span></td>
+                    <td>Hoy, 10:30 AM</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="client-info">
+                            <div class="avatar">JH</div>
+                            <div>
+                                <strong>Javier Hernández</strong><br>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">chicharito@gmail.com</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>Guadalajara, JAL</td>
+                    <td>8</td>
+                    <td><strong>$15,200.00</strong></td>
+                    <td><span class="status-pill active">Activo</span></td>
+                    <td>Ayer, 04:15 PM</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="client-info">
+                            <div class="avatar">BM</div>
+                            <div>
+                                <strong>Bepe Morales</strong><br>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">bepe@gmail.com</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>Monterrey, NL</td>
+                    <td>3</td>
+                    <td><strong>$4,100.00</strong></td>
+                    <td><span class="status-pill active">Activo</span></td>
+                    <td>Hace 3 días</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="client-info">
+                            <div class="avatar">SM</div>
+                            <div>
+                                <strong>Santiago Muñoz</strong><br>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">santi@macuin.com</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>Puebla, PUE</td>
+                    <td>1</td>
+                    <td><strong>$850.00</strong></td>
+                    <td><span class="status-pill active">Activo</span></td>
+                    <td>Hace 2 semanas</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function filterTable(val) {
+        const query = val.toLowerCase();
+        const rows = document.querySelectorAll('#clientsTable tbody tr');
+
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    }
+
+    // Animación de entrada
+    document.addEventListener('DOMContentLoaded', () => {
+        gsap.from(".stat-mini-card", {
+            y: 20,
+            opacity: 0,
+            duration: 0.5,
+            stagger: 0.1,
+            ease: "back.out(1.7)"
+        });
+    });
+</script>
+{% endblock %}

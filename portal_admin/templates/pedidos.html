@@ -1,0 +1,718 @@
+{% extends "admin_layout.html" %}
+
+{% block breadcrumb_active %}Pedidos{% endblock %}
+
+{% block admin_css %}
+<style>
+    .orders-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .orders-header h1 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn-download-all {
+        background: var(--accent);
+        color: white;
+        padding: 0.75rem 1.25rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        cursor: pointer;
+        border: none;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .btn-download-all:hover {
+        filter: brightness(1.2);
+        transform: translateY(-2px);
+    }
+
+    /* Quick Stats Mini Bar */
+    .quick-stats {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .q-stat {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .q-stat-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .q-stat-data span {
+        display: block;
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+
+    .q-stat-data strong {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .status-tabs {
+        display: flex;
+        gap: 1rem;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 2rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .tab-btn {
+        background: none;
+        border: none;
+        padding: 0.75rem 1rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        cursor: pointer;
+        position: relative;
+        transition: 0.2s;
+        font-size: 0.9rem;
+    }
+
+    .tab-btn.active {
+        color: var(--accent);
+    }
+
+    .tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: -0.5rem;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: var(--accent);
+        border-radius: 10px;
+    }
+
+    .orders-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    thead {
+        background: var(--bg-light);
+        border-bottom: 1px solid var(--border);
+    }
+
+    th {
+        padding: 1.25rem 1.5rem;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 800;
+        letter-spacing: 0.5px;
+    }
+
+    td {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+        color: var(--text-main);
+        font-size: 0.9rem;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    tr:hover {
+        background: rgba(99, 102, 241, 0.02);
+    }
+
+    .order-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .status-processing {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3B82F6;
+    }
+
+    .status-delivered {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+    }
+
+    .status-shipped {
+        background: rgba(139, 92, 246, 0.1);
+        color: #8B5CF6;
+    }
+
+    .client-info strong {
+        display: block;
+        color: var(--text-main);
+    }
+
+    .client-info span {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .btn-view {
+        background: var(--bg-light);
+        border: 1px solid var(--border);
+        color: var(--text-main);
+        padding: 0.6rem 1rem;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-view:hover {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+    }
+
+    /* Modern Detail View Styles */
+    .detail-container {
+        text-align: left;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .detail-section-title {
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .detail-section-title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    .detail-card-glass {
+        background: var(--bg-light);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .products-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .product-entry {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 1rem;
+        border-bottom: 1px dashed var(--border);
+    }
+
+    .product-entry:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .p-main-info strong {
+        display: block;
+        font-size: 0.95rem;
+        color: var(--text-main);
+        margin-bottom: 0.2rem;
+    }
+
+    .p-main-info span {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .p-price-tag {
+        font-weight: 800;
+        color: var(--text-main);
+        font-size: 1rem;
+    }
+
+    .logistics-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    .log-data-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .log-data-item label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+
+    .log-data-item p {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-main);
+        line-height: 1.5;
+    }
+
+    .summary-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        padding-top: 1.5rem;
+        border-top: 2px solid var(--border);
+    }
+
+    .total-label {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .total-amount {
+        font-size: 1.75rem;
+        font-weight: 900;
+        color: var(--accent);
+    }
+
+    /* New Phase Selector Styles */
+    .phase-selector {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background: var(--bg-light);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+    }
+
+    .phase-option {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        cursor: pointer;
+        transition: 0.2s;
+        background: var(--card-bg);
+    }
+
+    .phase-option:hover {
+        border-color: var(--accent);
+    }
+
+    .phase-option.active {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+    }
+
+    .phase-radio {
+        width: 16px;
+        height: 16px;
+        border: 2px solid currentColor;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .phase-option.active .phase-radio::after {
+        content: '';
+        width: 8px;
+        height: 8px;
+        background: white;
+        border-radius: 50%;
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="orders-header">
+    <h1>Gestión de pedidos</h1>
+    <div class="header-actions">
+        <button class="btn-download-all" onclick="downloadAllOrdersReport()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Exportar reporte PDF
+        </button>
+    </div>
+</div>
+
+<div class="quick-stats">
+    <div class="q-stat">
+        <div class="q-stat-icon" style="background: rgba(59, 130, 246, 0.1); color: #3B82F6;"><svg width="18"
+                height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg></div>
+        <div class="q-stat-data"><span>Pendientes</span><strong>01</strong></div>
+    </div>
+    <div class="q-stat">
+        <div class="q-stat-icon" style="background: rgba(139, 92, 246, 0.1); color: #8B5CF6;"><svg width="18"
+                height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M1 3h15v13H1z"></path>
+                <path d="M16 8h4l3 3v5h-7V8z"></path>
+                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+            </svg></div>
+        <div class="q-stat-data"><span>En camino</span><strong>01</strong></div>
+    </div>
+    <div class="q-stat">
+        <div class="q-stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10B981;"><svg width="18"
+                height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M20 6L9 17l-5-5"></path>
+            </svg></div>
+        <div class="q-stat-data"><span>Entregados</span><strong>01</strong></div>
+    </div>
+</div>
+
+<div class="status-tabs">
+    <button class="tab-btn active" onclick="filterByStatus('todos')">Todos los pedidos</button>
+    <button class="tab-btn" onclick="filterByStatus('PROCESANDO')">En bodega</button>
+    <button class="tab-btn" onclick="filterByStatus('ENVIADO')">En camino</button>
+    <button class="tab-btn" onclick="filterByStatus('ENTREGADO')">Completados</button>
+</div>
+
+<div class="orders-card">
+    <table id="ordersTable">
+        <thead>
+            <tr>
+                <th>Pedido</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Monto total</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Generado por JS -->
+        </tbody>
+    </table>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+    let pedidos = [
+        {
+            id: '8294',
+            cliente: 'Armando Maldonado Morales',
+            email: 'armando.m@gmail.com',
+            fecha: '06 Mar 2026',
+            total: '1,948.80',
+            estado: 'PROCESANDO',
+            items: [
+                { nombre: 'Bujía láser de Iridio', cant: 4, sub: '1,000.00' },
+                { nombre: 'Válvula PCV', cant: 1, sub: '180.00' },
+                { nombre: 'Filtro de aceite sintético', cant: 2, sub: '500.00' }
+            ],
+            detalles_pago: 'Tarjeta de Crédito (Visa **** 4221)',
+            direccion: 'Blvd. Bernardo Quintana 111, Querétaro, Qro.'
+        },
+        {
+            id: '7164',
+            cliente: 'Armando Maldonado Morales',
+            email: 'armando.m@gmail.com',
+            fecha: '15 Ene 2026',
+            total: '1,200.00',
+            estado: 'ENTREGADO',
+            items: [
+                { nombre: 'Set de Faros LED Adicionales', cant: 1, sub: '1,200.00' }
+            ],
+            detalles_pago: 'PayPal',
+            direccion: 'Blvd. Bernardo Quintana 111, Querétaro, Qro.'
+        },
+        {
+            id: '6542',
+            cliente: 'Mercy Figueroa',
+            email: 'mercy.f@gmail.com',
+            fecha: '01 Mar 2026',
+            total: '4,500.00',
+            estado: 'ENVIADO',
+            items: [
+                { nombre: 'Módulo ABS de precisión', cant: 1, sub: '4,500.00' }
+            ],
+            detalles_pago: 'Transferencia Bancaria',
+            direccion: 'Av. Constituyentes 45, Querétaro, Qro.'
+        }
+    ];
+
+    function renderOrders(data) {
+        const tbody = document.querySelector('#ordersTable tbody');
+        tbody.innerHTML = '';
+        data.forEach(p => {
+            let statusClass = 'status-processing';
+            let statusText = 'En bodega';
+            if (p.estado === 'ENTREGADO') { statusClass = 'status-delivered'; statusText = 'Entregado'; }
+            if (p.estado === 'ENVIADO') { statusClass = 'status-shipped'; statusText = 'En camino'; }
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight: 800; color: var(--accent);">#ORD-${p.id}</td>
+                <td>
+                    <div class="client-info">
+                        <strong>${p.cliente}</strong>
+                        <span>${p.email}</span>
+                    </div>
+                </td>
+                <td>${p.fecha}</td>
+                <td style="font-weight: 700;">$${p.total}</td>
+                <td><span class="order-badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    <button class="btn-view" onclick="viewOrderDetails('${p.id}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        Ver detalles
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function viewOrderDetails(id) {
+        const p = pedidos.find(x => x.id === id);
+
+        let itemsHtml = '';
+        p.items.forEach(item => {
+            itemsHtml += `
+                <div class="product-entry">
+                    <div class="p-main-info">
+                        <strong>${item.nombre}</strong>
+                        <span>Cantidad: ${item.cant} pieza(s)</span>
+                    </div>
+                    <div class="p-price-tag">$${item.sub}</div>
+                </div>
+            `;
+        });
+
+        const detailHtml = `
+            <div class="detail-container">
+                <div class="detail-section-title">Artículos solicitados</div>
+                <div class="detail-card-glass">
+                    <div class="products-list">
+                        ${itemsHtml}
+                    </div>
+                    <div class="summary-bar">
+                        <span class="total-label">Total del pedido</span>
+                        <span class="total-amount">$${p.total}</span>
+                    </div>
+                </div>
+
+                <div class="detail-section-title">Logística y envío</div>
+                <div class="detail-card-glass">
+                    <div class="logistics-grid">
+                        <div class="log-data-item">
+                            <label>Receptor de entrega</label>
+                            <p>${p.cliente}</p>
+                        </div>
+                        <div class="log-data-item">
+                            <label>Método de pago</label>
+                            <p>${p.detalles_pago}</p>
+                        </div>
+                        <div class="log-data-item" style="grid-column: span 2;">
+                            <label>Dirección completa</label>
+                            <p>${p.direccion}</p>
+                        </div>
+                        <div class="log-data-item" style="grid-column: span 2;">
+                            <label>Estado logístico actual</label>
+                            <div style="margin-top: 0.5rem;">
+                                <span class="order-badge ${p.estado === 'ENTREGADO' ? 'status-delivered' : (p.estado === 'ENVIADO' ? 'status-shipped' : 'status-processing')}">
+                                    ${p.estado === 'ENTREGADO' ? 'Enviado y entregado' : (p.estado === 'ENVIADO' ? 'En camino a destino' : 'Preparando en bodega')}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        showAppModal({
+            title: 'Expediente del pedido #ORD-' + p.id,
+            htmlContent: detailHtml,
+            icon: 'help',
+            confirmText: 'Actualizar fase',
+            keepOpen: true,
+            onConfirm: () => {
+                const phaseHtml = `
+                    <div class="phase-selector">
+                        <div class="phase-option ${p.estado === 'PROCESANDO' ? 'active' : ''}" onclick="setPhase(this, 'PROCESANDO')">
+                            <div class="phase-radio"></div>
+                            <span>En bodega (Preparación)</span>
+                        </div>
+                        <div class="phase-option ${p.estado === 'ENVIADO' ? 'active' : ''}" onclick="setPhase(this, 'ENVIADO')">
+                            <div class="phase-radio"></div>
+                            <span>Transito (En camino)</span>
+                        </div>
+                        <div class="phase-option ${p.estado === 'ENTREGADO' ? 'active' : ''}" onclick="setPhase(this, 'ENTREGADO')">
+                            <div class="phase-radio"></div>
+                            <span>Completado (Entregado)</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="new-phase-val" value="${p.estado}">
+                `;
+
+                showAppModal({
+                    title: 'Cambiar fase logística',
+                    body: 'Selecciona el nuevo estado para el pedido #ORD-' + p.id + ':',
+                    htmlContent: phaseHtml,
+                    icon: 'edit',
+                    confirmText: 'Confirmar cambio',
+                    onConfirm: () => {
+                        const newPhase = document.getElementById('new-phase-val').value;
+                        p.estado = newPhase;
+                        renderOrders(pedidos);
+
+                        setTimeout(() => {
+                            showAppModal({
+                                title: '¡Fase actualizada!',
+                                body: 'El pedido ahora se encuentra en estado: ' + (newPhase === 'PROCESANDO' ? 'En bodega' : (newPhase === 'ENVIADO' ? 'En camino' : 'Entregado')),
+                                icon: 'help', confirmText: 'Excelente', singleButton: true
+                            });
+                        }, 350);
+                    }
+                });
+            }
+        });
+    }
+
+    function setPhase(el, val) {
+        document.querySelectorAll('.phase-option').forEach(opt => opt.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('new-phase-val').value = val;
+    }
+
+    function filterByStatus(status) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.innerText.includes(status === 'todos' ? 'Todos' : (status === 'PROCESANDO' ? 'bodega' : (status === 'ENVIADO' ? 'camino' : (status === 'ENTREGADO' ? 'Completados' : '')))));
+        });
+
+        if (status === 'todos') {
+            renderOrders(pedidos);
+        } else {
+            const filtered = pedidos.filter(p => p.estado === status);
+            renderOrders(filtered);
+        }
+    }
+
+    // PDF ALL ORDERS
+    function downloadAllOrdersReport() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+
+        doc.setFillColor(10, 10, 31);
+        doc.rect(0, 0, 210, 30, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.setFont("helvetica", "bold");
+        doc.text("Macuin Autopartes - Reporte de Pedidos", 15, 20);
+
+        doc.setTextColor(30, 41, 59);
+        doc.setFontSize(10);
+        doc.text("Fecha del reporte: " + new Date().toLocaleDateString(), 150, 45);
+
+        doc.setFontSize(14);
+        doc.text("Resumen General de Operaciones", 15, 60);
+
+        let y = 75;
+        doc.setFontSize(10);
+        pedidos.forEach(p => {
+            doc.setFont("helvetica", "bold");
+            doc.text("#ORD-" + p.id + " | " + p.cliente, 15, y);
+            doc.setFont("helvetica", "normal");
+            doc.text("Fecha: " + p.fecha + " | Total: $" + p.total + " MXN", 15, y + 5);
+            doc.text("Estado: " + (p.estado === 'PROCESANDO' ? 'En bodega' : (p.estado === 'ENVIADO' ? 'En camino' : 'Entregado')), 15, y + 10);
+            y += 20;
+
+            if (y > 270) { doc.addPage(); y = 20; }
+        });
+
+        doc.save("Reporte_General_Pedidos_Macuin.pdf");
+
+        showAppModal({
+            title: 'Reporte generado',
+            body: 'Se ha exportado el Reporte General de Pedidos con éxito.',
+            icon: 'help', confirmText: 'Cerrar', singleButton: true
+        });
+    }
+
+    // Init
+    renderOrders(pedidos);
+</script>
+{% endblock %}

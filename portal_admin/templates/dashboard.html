@@ -1,0 +1,566 @@
+{% extends "base.html" %}
+
+{% block title %}MACUIN - Inventario administrativo{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        display: flex;
+        background-color: var(--bg-light);
+    }
+
+    /* Sidebar */
+    .sidebar {
+        width: 250px;
+        background-color: var(--primary);
+        color: white;
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        height: 100vh;
+        z-index: 100;
+    }
+
+    .sidebar-logo {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 3rem;
+    }
+
+    .sidebar-logo img {
+        width: 40px;
+        filter: brightness(0) invert(1);
+    }
+
+    .sidebar-logo div {
+        font-size: 1.1rem;
+        font-weight: 800;
+        line-height: 1.1;
+    }
+
+    .sidebar-logo span {
+        display: block;
+        font-size: 0.7rem;
+        color: #94A3B8;
+        font-weight: 500;
+        letter-spacing: 1px;
+    }
+
+    .menu-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #475569;
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+
+    .menu-item {
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 0.5rem;
+        border-radius: 12px;
+        color: #94A3B8;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .menu-item svg {
+        width: 18px;
+        height: 18px;
+        opacity: 0.7;
+    }
+
+    .menu-item:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .menu-item.active {
+        background-color: var(--accent);
+        color: white;
+        box-shadow: 0 4px 12px rgba(67, 56, 202, 0.3);
+    }
+
+    .menu-item.active svg {
+        opacity: 1;
+    }
+
+    /* Main Content */
+    .main-content {
+        flex: 1;
+        margin-left: 250px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Header */
+    header {
+        height: 80px;
+        background: white;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 3rem;
+        position: sticky;
+        top: 0;
+        z-index: 90;
+    }
+
+    .breadcrumbs {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #94A3B8;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .breadcrumbs span:last-child {
+        color: var(--primary);
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .search-container {
+        position: relative;
+    }
+
+    .search-container input {
+        padding: 0.65rem 1rem 0.65rem 2.5rem;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #F8FAFC;
+        width: 240px;
+        font-size: 0.85rem;
+        outline: none;
+        transition: all 0.2s;
+    }
+
+    .search-container input:focus {
+        border-color: var(--accent);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.1);
+    }
+
+    .search-container svg {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94A3B8;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .user-text {
+        text-align: right;
+    }
+
+    .user-name {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .user-role {
+        display: block;
+        font-size: 0.7rem;
+        color: #94A3B8;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .user-avatar {
+        width: 38px;
+        height: 38px;
+        background: var(--primary);
+        color: white;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.85rem;
+    }
+
+    /* Page Content Area */
+    .content-area {
+        padding: 2.5rem 3rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2.5rem;
+    }
+
+    .page-title h1 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .page-title p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+
+    .btn-add {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .btn-add:hover {
+        background: #3730A3;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(67, 56, 202, 0.2);
+    }
+
+    /* Table Card */
+    .card-table {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    thead {
+        background: #F8FAFC;
+    }
+
+    th {
+        padding: 1.25rem 1.5rem;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    td {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #F1F5F9;
+        vertical-align: middle;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    .td-product {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .prod-name {
+        font-weight: 700;
+        color: var(--primary);
+        font-size: 0.95rem;
+    }
+
+    .prod-id {
+        font-size: 0.75rem;
+        color: #94A3B8;
+        font-weight: 600;
+    }
+
+    .badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .badge-success {
+        background: #DCFCE7;
+        color: #15803D;
+    }
+
+    .badge-warning {
+        background: #FEF3C7;
+        color: #B45309;
+    }
+
+    .badge-danger {
+        background: #FEE2E2;
+        color: #B91C1C;
+    }
+
+    .btn-edit {
+        color: #94A3B8;
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: color 0.15s;
+    }
+
+    .btn-edit:hover {
+        color: var(--accent);
+    }
+
+    body.dark-mode {
+        background-color: #050505;
+    }
+</style>
+{% endblock %}
+
+{% block body_content %}
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <img src="https://res.cloudinary.com/dpvm2gro2/image/upload/v1772562917/1_kj2lq7.png" alt="Logo">
+        <div>
+            MACUIN
+            <span>autopartes</span>
+        </div>
+    </div>
+
+    <div class="menu-label">Principal</div>
+
+    <a href="#" class="menu-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        Panel control
+    </a>
+
+    <a href="/dashboard" class="menu-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+            </path>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
+        Inventario
+    </a>
+
+    <a href="#" class="menu-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
+            <path d="M3 6h18"></path>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        Pedidos
+    </a>
+
+    <a href="/" class="menu-item" style="margin-top: auto; color: #F87171;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        Cerrar sesión
+    </a>
+</aside>
+
+<!-- Main Content -->
+<main class="main-content">
+    <header>
+        <div class="breadcrumbs">
+            Dashboard <span>/</span> <span>Vista general</span>
+        </div>
+
+        <div class="header-actions">
+            <div class="search-container">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" placeholder="Buscar...">
+            </div>
+
+            <div class="user-info">
+                <div class="user-text">
+                    <span class="user-name">Joshua Macuin</span>
+                    <span class="user-role">Administrador</span>
+                </div>
+                <div class="user-avatar">JM</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="content-area">
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Inventario</h1>
+                <p>Catálogo de productos y existencias.</p>
+            </div>
+            <a href="#" class="btn-add">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Añadir productos
+            </a>
+        </div>
+
+        <div class="card-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Stock</th>
+                        <th>Precio</th>
+                        <th>Estado</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="td-product">
+                                <span class="prod-name">Batería AAA para carro</span>
+                                <span class="prod-id">BT-992</span>
+                            </div>
+                        </td>
+                        <td style="color: var(--text-muted); font-weight: 500;">Eléctrico</td>
+                        <td><strong style="color: var(--primary);">12</strong></td>
+                        <td style="font-weight: 600;">$125.50</td>
+                        <td><span class="badge badge-success">Disponible</span></td>
+                        <td>
+                            <button class="btn-edit">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="td-product">
+                                <span class="prod-name">Cables para corriente inalambricos</span>
+                                <span class="prod-id">FZ-441</span>
+                            </div>
+                        </td>
+                        <td style="color: var(--text-muted); font-weight: 500;">Eléctrico</td>
+                        <td><strong style="color: var(--primary);">4</strong></td>
+                        <td style="font-weight: 600;">$45.00</td>
+                        <td><span class="badge badge-warning">Stock bajo</span></td>
+                        <td>
+                            <button class="btn-edit">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="td-product">
+                                <span class="prod-name">Filtro de aceite</span>
+                                <span class="prod-id">FL-220</span>
+                            </div>
+                        </td>
+                        <td style="color: var(--text-muted); font-weight: 500;">Motor</td>
+                        <td><strong style="color: var(--primary);">45</strong></td>
+                        <td style="font-weight: 600;">$12.99</td>
+                        <td><span class="badge badge-success">Disponible</span></td>
+                        <td>
+                            <button class="btn-edit">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="td-product">
+                                <span class="prod-name">Amortiguador trasero para patineta</span>
+                                <span class="prod-id">AM-115</span>
+                            </div>
+                        </td>
+                        <td style="color: var(--text-muted); font-weight: 500;">Suspensión</td>
+                        <td><strong style="color: var(--primary);">0</strong></td>
+                        <td style="font-weight: 600;">$89.00</td>
+                        <td><span class="badge badge-danger">Agotado</span></td>
+                        <td>
+                            <button class="btn-edit">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="td-product">
+                                <span class="prod-name">Bujía de dudosa procedencia</span>
+                                <span class="prod-id">BU-882</span>
+                            </div>
+                        </td>
+                        <td style="color: var(--text-muted); font-weight: 500;">Motor</td>
+                        <td><strong style="color: var(--primary);">120</strong></td>
+                        <td style="font-weight: 600;">$8.50</td>
+                        <td><span class="badge badge-success">Disponible</span></td>
+                        <td>
+                            <button class="btn-edit">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,594 @@
+{% extends "admin_layout.html" %}
+
+{% block breadcrumb_active %}Inventario{% endblock %}
+
+{% block admin_css %}
+<style>
+    .inv-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .inv-header h1 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .search-bar {
+        position: relative;
+        max-width: 400px;
+        width: 100%;
+    }
+
+    .search-bar svg {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.85rem 1rem 0.85rem 2.75rem;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        color: var(--text-main);
+        font-size: 0.9rem;
+        outline: none;
+        transition: 0.2s;
+    }
+
+    .search-input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    /* Category Filters */
+    .cat-filters {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .cat-btn {
+        padding: 0.65rem 1.25rem;
+        border-radius: 99px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .cat-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    .cat-btn.active {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+    }
+
+    /* Inventory Table */
+    .inv-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    thead {
+        background: var(--bg-light);
+        border-bottom: 1px solid var(--border);
+    }
+
+    th {
+        padding: 1.25rem 1.5rem;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 800;
+        letter-spacing: 0.5px;
+    }
+
+    td {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+        color: var(--text-main);
+        font-size: 0.9rem;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    .product-cell {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .product-thumb {
+        width: 45px;
+        height: 45px;
+        border-radius: 10px;
+        object-fit: cover;
+        background: var(--bg-light);
+        border: 1px solid var(--border);
+    }
+
+    .product-info strong {
+        display: block;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .product-info span {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .stock-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 800;
+    }
+
+    .stock-ok {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+    }
+
+    .stock-low {
+        background: rgba(245, 158, 11, 0.1);
+        color: #F59E0B;
+    }
+
+    .stock-none {
+        background: rgba(239, 68, 68, 0.1);
+        color: #EF4444;
+    }
+
+    .btn-edit {
+        background: var(--bg-light);
+        border: 1px solid var(--border);
+        color: var(--text-main);
+        padding: 0.6rem 1rem;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-edit:hover {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+    }
+
+    /* Form Styles within Modal */
+    .edit-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+    }
+
+    .full-width {
+        grid-column: span 2;
+    }
+
+    .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .field-group label {
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .field-input,
+    .field-select,
+    .field-area {
+        padding: 0.85rem;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--bg-light);
+        color: var(--text-main);
+        font-size: 0.9rem;
+        outline: none;
+        transition: 0.2s;
+        width: 100%;
+    }
+
+    .field-area {
+        resize: none;
+    }
+
+    .field-input:focus,
+    .field-select:focus,
+    .field-area:focus {
+        border-color: var(--accent);
+    }
+
+    .img-preview-box {
+        width: 100%;
+        height: 140px;
+        border-radius: 14px;
+        border: 2px dashed var(--border);
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        background-color: var(--bg-light);
+    }
+
+    .upload-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 40px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        cursor: pointer;
+        backdrop-filter: blur(4px);
+        transition: 0.2s;
+    }
+
+    .upload-overlay:hover {
+        background: rgba(67, 56, 202, 0.8);
+    }
+
+    .img-inputs-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    /* Toggle Switch */
+    .toggle-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--bg-light);
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+    }
+
+    .toggle-label {
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 22px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked+.slider {
+        background-color: var(--accent);
+    }
+
+    input:checked+.slider:before {
+        transform: translateX(22px);
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="inv-header">
+    <h1>Gestión de inventario</h1>
+    <div class="search-bar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre o ID..."
+            onkeyup="applyFilters()">
+    </div>
+</div>
+
+<div class="cat-filters">
+    <button class="cat-btn active" onclick="filterByCategory('all', this)">Todas</button>
+    <button class="cat-btn" onclick="filterByCategory('motor', this)">Motor</button>
+    <button class="cat-btn" onclick="filterByCategory('frenos', this)">Frenos</button>
+    <button class="cat-btn" onclick="filterByCategory('suspension', this)">Suspensión</button>
+    <button class="cat-btn" onclick="filterByCategory('electrico', this)">Eléctrico</button>
+</div>
+
+<div class="inv-card">
+    <table id="inventoryTable">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Precio (MXN)</th>
+                <th>Existencia</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+    const productos = [
+        { id: 1, nombre: 'Amortiguador de gas premium', precio: '1450', stock: 15, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803583/1_mum70h.jpg', desc: 'Vuelve tu auto estable ante los baches y elimina el balanceo por completo.', cat: 'suspension', active: true },
+        { id: 2, nombre: 'Batería automotriz 12V LTH', precio: '2300', stock: 45, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803604/2_gv1kb4.jpg', desc: 'Arranque seguro bajo cualquier clima con celdas de alta duración.', cat: 'electrico', active: true },
+        { id: 3, nombre: 'Llanta deportiva de alto rendimiento', precio: '1850', stock: 3, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803583/3_jhe3ti.jpg', desc: 'Maximiza el agarre y la tracción en cualquier condición de pista o lluvia.', cat: 'suspension', active: true },
+        { id: 4, nombre: 'Filtro de aceite sintético', precio: '250', stock: 12, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803583/4_rejzkf.jpg', desc: 'Atrapa hasta el 99% de las partículas contaminantes del motor.', cat: 'motor', active: true },
+        { id: 5, nombre: 'Juego de balatas cerámicas', precio: '750', stock: 25, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803583/5_xqmuur.jpg', desc: 'Frenado silencioso, libre de asbesto y ultra seguro.', cat: 'frenos', active: true },
+        { id: 6, nombre: 'Faros LED de largo alcance', precio: '1200', stock: 8, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803611/6_wcpptk.jpg', desc: 'Iluminación nítida con más de 10,000 lúmenes de potencia para carretera.', cat: 'electrico', active: true },
+        { id: 7, nombre: 'Radiador de aluminio reforzado', precio: '2100', stock: 5, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803582/7_nrnjsu.jpg', desc: 'Sistema de enfriamiento superior para prevenir sobrecalentamientos.', cat: 'motor', active: true },
+        { id: 8, nombre: 'Bomba de agua de alto flujo', precio: '850', stock: 18, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803601/8_djl9tm.jpg', desc: 'Mantiene un flujo constante y óptimo del refrigerante.', cat: 'motor', active: true },
+        { id: 9, nombre: 'Kit de distribución completo', precio: '3400', stock: 2, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803605/9_o22arl.jpg', desc: 'Sincronización perfecta del motor, incluye banda, tensor y polea.', cat: 'motor', active: true },
+        { id: 10, nombre: 'Sensor de oxígeno Denso', precio: '950', stock: 10, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803583/10_xqowdm.jpg', desc: 'Optimiza el consumo de combustible midiendo la mezcla de gases.', cat: 'electrico', active: true },
+        { id: 11, nombre: 'Inyector de combustible 4 puertos', precio: '1100', stock: 15, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803583/11_n3roer.jpg', desc: 'Pulverización exacta para aprovechar cada gota de gasolina.', cat: 'motor', active: true },
+        { id: 12, nombre: 'Bobina de encendido', precio: '600', stock: 30, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803587/12_dbimni.jpg', desc: 'Proporciona la chispa con voltaje ideal para la ignición.', cat: 'electrico', active: true },
+        { id: 13, nombre: 'Bujía láser de Iridio', precio: '250', stock: 100, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803615/13_q15jp9.jpg', desc: 'Encendido instantáneo y ahorro de combustible con punta fina.', cat: 'electrico', active: true },
+        { id: 14, nombre: 'Alternador 12V', precio: '2800', stock: 4, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803612/14_cx1b8o.jpg', desc: 'Generador de energía probado para abastecer todos los accesorios eléctricos.', cat: 'electrico', active: true },
+        { id: 15, nombre: 'Marcha de arranque', precio: '1900', stock: 7, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803600/15_ojqtbz.jpg', desc: 'Engrane preciso y potente para iniciar tu motor suavemente.', cat: 'electrico', active: true },
+        { id: 16, nombre: 'Compresor A/C', precio: '3600', stock: 3, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803605/16_jfkbtw.jpg', desc: 'Refrigera tu cabina al instante incluso en días extremadamente soleados.', cat: 'motor', active: true },
+        { id: 17, nombre: 'Condensador A/C', precio: '1400', stock: 8, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803610/17_lele1h.jpg', desc: 'Disipa el calor del refrigerante de manera altamente eficiente.', cat: 'motor', active: true },
+        { id: 18, nombre: 'Filtro de aire alto flujo', precio: '550', stock: 20, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803587/18_iohp0d.jpg', desc: 'Cónico y lavable, otorga caballos de fuerza y sonido deportivo.', cat: 'motor', active: true },
+        { id: 19, nombre: 'Filtro de cabina carbón', precio: '350', stock: 35, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803587/19_arzsz1.jpg', desc: 'Respira aire purificado bloqueando humo y olores.', cat: 'motor', active: true },
+        { id: 20, nombre: 'Embrague completo', precio: '2900', stock: 5, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803588/20_zgaqnp.jpg', desc: 'Cambios de velocidad precisos y suaves como nuevo.', cat: 'motor', active: true },
+        { id: 21, nombre: 'Bomba gasolina eléctrica', precio: '1250', stock: 12, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803582/21_g4odld.jpg', desc: 'Entrega constante y silenciosa de presión al riel.', cat: 'motor', active: true },
+        { id: 22, nombre: 'Rótula de suspensión', precio: '480', stock: 22, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803562/22_riq9wk.jpg', desc: 'Soporta movimientos bruscos manteniendo firme la dirección.', cat: 'suspension', active: true },
+        { id: 23, nombre: 'Terminal de dirección', precio: '320', stock: 16, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803609/23_gzgzka.jpg', desc: 'Protege la alineación de tu auto frente a baches.', cat: 'suspension', active: true },
+        { id: 24, nombre: 'Tornillo estabilizador', precio: '250', stock: 28, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803609/24_rak6t6.jpg', desc: 'Conecta la barra estabilizadora evitando ruidos.', cat: 'suspension', active: true },
+        { id: 25, nombre: 'Caliper de freno', precio: '1600', stock: 4, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803613/25_cjcn0h.jpg', desc: 'Muerde fuertemente el disco otorgando frenadas de pánico.', cat: 'frenos', active: true },
+        { id: 26, nombre: 'Rotor de disco de freno', precio: '950', stock: 11, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803589/26_xj1orj.jpg', desc: 'Ventilado para evitar alabeo en pendientes.', cat: 'frenos', active: true },
+        { id: 27, nombre: 'Válvula PCV', precio: '180', stock: 42, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803599/27_hmbamh.jpg', desc: 'Libera la presión de gases nocivos cuidando los sellos.', cat: 'motor', active: true },
+        { id: 28, nombre: 'Empaque de cabeza', precio: '850', stock: 7, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803600/28_cul7ox.jpg', desc: 'Sella a la perfección soportando altas presiones termales.', cat: 'motor', active: true },
+        { id: 29, nombre: 'Sensor MAF', precio: '1150', stock: 6, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803604/29_tv6npk.jpg', desc: 'Mide con precisión la masa de aire que respira el motor.', cat: 'electrico', active: true },
+        { id: 30, nombre: 'Módulo ABS', precio: '4500', stock: 1, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803582/30_gvgpfh.jpg', desc: 'El cerebro para frenar sin bloquear ruedas.', cat: 'frenos', active: true }
+    ];
+
+    function renderTable(data) {
+        const tbody = document.querySelector('#inventoryTable tbody');
+        tbody.innerHTML = '';
+        data.forEach(p => {
+            const stockClass = p.stock === 0 ? 'stock-none' : (p.stock < 5 ? 'stock-low' : 'stock-ok');
+            const stateText = p.active ? 'Activo' : 'Deshabilitado';
+            const stateColor = p.active ? 'var(--success)' : 'var(--danger)';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <div class="product-cell">
+                        <img src="${p.img}" class="product-thumb">
+                        <div class="product-info">
+                            <strong>${p.nombre}</strong>
+                            <span>REF-${String(p.id).padStart(4, '0')}</span>
+                        </div>
+                    </div>
+                </td>
+                <td style="font-weight: 700;">$${p.precio}</td>
+                <td><span class="stock-badge ${stockClass}">${p.stock} pz</span></td>
+                <td><span style="font-weight: 800; color: ${stateColor}; font-size: 0.8rem; text-transform: uppercase;">${stateText}</span></td>
+                <td>
+                    <button class="btn-edit" onclick="openProductEditor(${p.id})">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        Editar
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function openProductEditor(id) {
+        const p = productos.find(x => x.id === id);
+
+        const editorHtml = `
+            <div class="edit-grid">
+                <div class="field-group full-width">
+                    <label>Imagen del producto</label>
+                    <div class="img-preview-box" id="imgBox" style="background-image: url('${p.img}')">
+                        <label class="upload-overlay">
+                            CAMBIAR IMAGEN
+                            <input type="file" id="p-file" style="display:none;" accept="image/*" onchange="previewLocalImage(this)">
+                        </label>
+                    </div>
+                    <div class="img-inputs-container">
+                        <input type="text" id="p-img" class="field-input" value="${p.img}" placeholder="URL de la imagen" oninput="document.getElementById('imgBox').style.backgroundImage='url('+this.value+')'">
+                    </div>
+                </div>
+                <div class="field-group full-width">
+                    <label>Nombre del producto</label>
+                    <input type="text" id="p-name" class="field-input" value="${p.nombre}" placeholder="Ej: Amortiguador de gas" onkeypress="return /[a-zA-ZáéíóúÁÉÍÓÚñÑ ]/.test(event.key)">
+                </div>
+                <div class="field-group">
+                    <label>Categoría</label>
+                    <select id="p-cat" class="field-select">
+                        <option value="motor" ${p.cat === 'motor' ? 'selected' : ''}>Motor</option>
+                        <option value="frenos" ${p.cat === 'frenos' ? 'selected' : ''}>Frenos</option>
+                        <option value="suspension" ${p.cat === 'suspension' ? 'selected' : ''}>Suspensión</option>
+                        <option value="electrico" ${p.cat === 'electrico' ? 'selected' : ''}>Eléctrico</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label>Precio (MXN)</label>
+                    <input type="text" id="p-price" class="field-input" value="${p.precio}" placeholder="Ej: 1450" onkeypress="return /[0-9]/.test(event.key)">
+                </div>
+                <div class="field-group">
+                    <label>Stock actual</label>
+                    <input type="text" id="p-stock" class="field-input" value="${p.stock}" placeholder="Ej: 15" onkeypress="return /[0-9]/.test(event.key)">
+                </div>
+                <div class="field-group">
+                    <label>Estado en catálogo</label>
+                    <div class="toggle-row">
+                        <span class="toggle-label" id="status-label">${p.active ? 'Activo' : 'Deshabilitado'}</span>
+                        <label class="switch">
+                            <input type="checkbox" id="p-active" ${p.active ? 'checked' : ''} onchange="document.getElementById('status-label').innerText = this.checked ? 'Activo' : 'Deshabilitado'">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="field-group full-width">
+                    <label>Descripción completa</label>
+                    <textarea id="p-desc" class="field-area" rows="3" placeholder="Describe los beneficios técnicos...">${p.desc}</textarea>
+                </div>
+            </div>
+        `;
+
+        showAppModal({
+            title: 'Editar producto',
+            htmlContent: editorHtml,
+            icon: 'edit',
+            confirmText: 'Guardar cambios',
+            keepOpen: true, // Para manejar la validación manual
+            onConfirm: () => {
+                const name = document.getElementById('p-name').value.trim();
+                const price = document.getElementById('p-price').value.trim();
+                const stock = document.getElementById('p-stock').value.trim();
+                const desc = document.getElementById('p-desc').value.trim();
+                const img = document.getElementById('p-img').value.trim();
+                const cat = document.getElementById('p-cat').value;
+                const active = document.getElementById('p-active').checked;
+
+                // Validación de campos vacíos
+                if (!name || !price || !stock || !desc || !img) {
+                    showAppModal({
+                        title: 'Campos incompletos',
+                        body: 'Atención: Debes rellenar todos los campos correctamente antes de guardar.',
+                        icon: 'alert',
+                        confirmText: 'Entendido',
+                        singleButton: true,
+                        type: 'danger'
+                    });
+                    return;
+                }
+
+                // Guardado simualdo
+                p.nombre = name;
+                p.precio = price;
+                p.stock = parseInt(stock);
+                p.desc = desc;
+                p.img = img;
+                p.cat = cat;
+                p.active = active;
+
+                renderTable(productos);
+                closeModal();
+
+                setTimeout(() => {
+                    showAppModal({
+                        title: '¡Cambios aplicados!',
+                        body: 'La información de ' + name + ' ha sido actualizada correctamente en el inventario.',
+                        icon: 'help', confirmText: 'Excelente', singleButton: true
+                    });
+                }, 350);
+            }
+        });
+    }
+
+    function previewLocalImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('imgBox').style.backgroundImage = 'url(' + e.target.result + ')';
+                document.getElementById('p-img').value = e.target.result; // Simular URL con base64 para el objeto
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    let currentCategory = 'all';
+
+    function filterByCategory(cat, btn) {
+        currentCategory = cat;
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = productos.filter(p => {
+            const matchesTerm = p.nombre.toLowerCase().includes(term) || String(p.id).includes(term);
+            const matchesCat = currentCategory === 'all' || p.cat === currentCategory;
+            return matchesTerm && matchesCat;
+        });
+        renderTable(filtered);
+    }
+
+    renderTable(productos);
+</script>
+{% endblock %}

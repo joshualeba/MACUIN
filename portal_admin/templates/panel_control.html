@@ -1,0 +1,385 @@
+{% extends "admin_layout.html" %}
+
+{% block breadcrumb_active %}Panel control{% endblock %}
+
+{% block admin_css %}
+<style>
+    .dash-head {
+        margin-bottom: 2.5rem;
+    }
+
+    .dash-head h1 {
+        font-size: 1.85rem;
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.5px;
+    }
+
+    .dash-head p {
+        font-size: 1.05rem;
+        color: var(--text-muted);
+        max-width: 800px;
+        line-height: 1.6;
+    }
+
+    /* Stats Grid */
+    .stats-layout {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3.5rem;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 1.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        position: relative;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-info {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--bg-light);
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        transition: 0.2s;
+    }
+
+    .btn-info:hover {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+    }
+
+    .btn-info svg {
+        width: 14px;
+        height: 14px;
+        stroke-width: 2.5;
+    }
+
+    .stat-val {
+        font-size: 2.25rem;
+        font-weight: 800;
+        color: var(--text-main);
+        line-height: 1;
+    }
+
+    .stat-name {
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Logistics */
+    .sec-label {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 1.5rem;
+    }
+
+    .log-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3.5rem;
+    }
+
+    .log-item {
+        background: var(--bg-light);
+        border: 1px dashed var(--border);
+        border-radius: 18px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+    }
+
+    .log-text span {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+    }
+
+    .log-text strong {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    /* Actions */
+    .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .act-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 2.5rem;
+        text-decoration: none;
+        color: var(--text-main);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .act-card:hover {
+        border-color: var(--accent);
+    }
+
+    .act-icon {
+        width: 52px;
+        height: 52px;
+        background: var(--bg-light);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent);
+        margin-bottom: 1.75rem;
+    }
+
+    .act-card h3 {
+        font-size: 1.3rem;
+        font-weight: 800;
+        margin-bottom: 0.75rem;
+    }
+
+    .act-card p {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .act-btn {
+        font-weight: 800;
+        font-size: 0.85rem;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: auto;
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="dash-head">
+    <h1>¡Hola de nuevo, Bepe!</h1>
+    <p>Bienvenido al comando central de Macuin Autopartes. Gestiona el inventario, revisa pedidos y mantén el control
+        total de las operaciones desde un solo lugar.</p>
+</div>
+
+<h2 class="sec-label">Resumen de inventario</h2>
+<div class="stats-layout">
+    <div class="stat-card">
+        <div class="card-top">
+            <div class="icon-box" style="background: rgba(67, 56, 202, 0.1); color: #6366F1;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path
+                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                    </path>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+            </div>
+            <div class="btn-info"
+                onclick="launchHelp('Productos totales', 'Muestra la cantidad total de autopartes registradas en el catálogo activo de Macuin.')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+        </div>
+        <div>
+            <div class="stat-val">30</div>
+            <div class="stat-name">Productos totales</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="card-top">
+            <div class="icon-box" style="background: rgba(245, 158, 11, 0.1); color: #F59E0B;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                    </path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <div class="btn-info"
+                onclick="launchHelp('Stock bajo', 'Indica productos con menos de 5 unidades. Es vital reabastecer estas piezas para evitar quiebres de inventario.')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+        </div>
+        <div>
+            <div class="stat-val">05</div>
+            <div class="stat-name">Stock bajo</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="card-top">
+            <div class="icon-box" style="background: rgba(16, 185, 129, 0.1); color: #10B981;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
+            <div class="btn-info"
+                onclick="launchHelp('Clientes activos', 'Cantidad de empresas o perfiles comerciales con compras registradas recientemente.')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+        </div>
+        <div>
+            <div class="stat-val">12</div>
+            <div class="stat-name">Clientes activos</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="card-top">
+            <div class="icon-box" style="background: rgba(139, 92, 246, 0.1); color: #8B5CF6;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="9" cy="21" r="1"></circle>
+                    <circle cx="20" cy="21" r="1"></circle>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+            </div>
+            <div class="btn-info"
+                onclick="launchHelp('Ventas del día', 'Total de pedidos confirmados y pagados exitosamente durante la jornada de hoy.')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+        </div>
+        <div>
+            <div class="stat-val">08</div>
+            <div class="stat-name">Ventas del día</div>
+        </div>
+    </div>
+</div>
+
+<h2 class="sec-label">Logística y entregas</h2>
+<div class="log-grid">
+    <div class="log-item">
+        <div style="color: var(--success);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg></div>
+        <div class="log-text"><span>Entregas realizadas</span><strong>42</strong></div>
+    </div>
+    <div class="log-item">
+        <div style="color: var(--accent);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg></div>
+        <div class="log-text"><span>En proceso</span><strong>15</strong></div>
+    </div>
+    <div class="log-item">
+        <div style="color: var(--warning);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5">
+                <path d="M1 3h15v13H1z"></path>
+                <path d="M16 8h4l3 3v5h-7V8z"></path>
+                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+            </svg></div>
+        <div class="log-text"><span>Pendientes envío</span><strong>07</strong></div>
+    </div>
+</div>
+
+<h2 class="sec-label">Acciones rápidas</h2>
+<div class="actions-grid">
+    <a href="/inventario" class="act-card">
+        <div class="act-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path
+                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                </path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg></div>
+        <h3>Gestión de inventario</h3>
+        <p>Controla existencias, edita el catálogo de piezas y reabastece el stock bajo de forma eficiente.</p>
+        <div class="act-btn">Ir al catálogo &rarr;</div>
+    </a>
+    <a href="/usuarios" class="act-card">
+        <div class="act-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg></div>
+        <h3>Administración de usuarios</h3>
+        <p>Gestiona permisos del personal interno y revisa el estado de tus clientes corporativos Premium.</p>
+        <div class="act-btn">Ver usuarios &rarr;</div>
+    </a>
+</div>
+
+<script>
+    function launchHelp(title, content) {
+        if (event) event.stopPropagation();
+        showAppModal({
+            title: title,
+            body: content,
+            icon: 'help',
+            confirmText: 'Entendido',
+            singleButton: true,
+            onConfirm: () => { }
+        });
+    }
+</script>
+{% endblock %}
