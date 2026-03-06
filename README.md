@@ -43,11 +43,11 @@ docker-compose up --build -d
 Por favor, sigan estos pasos para subir sus cambios y evitar conflictos:
 
 1.  **Sincronizar:** `git pull origin develop`
-2.  **Nueva Tarea:** `git checkout -b feature/HU_X.X`
+2.  **Nueva tarea:** `git checkout -b feature/HU_X.X`
 3.  **Configurar autor:**
     *   `git config user.name "TuNombre"`
     *   `git config user.email "tu@email.com"`
-4.  **Guardar y Subir:**
+4.  **Guardar y subir:**
     *   `git add .`
     *   `git commit -m "Descripción de la tarea"`
     *   `git push origin feature/HU_X.X`
@@ -55,8 +55,8 @@ Por favor, sigan estos pasos para subir sus cambios y evitar conflictos:
 ---
 
 ## 📅 Integrantes del equipo
-*   **Joshua:** Integración y Configuración del Repo.
-*   **Santy:** Gestión de Pedidos y Logística.
-*   **Maria:** Catálogo y Carrito de Compras.
-*   **Fabiola:** Gestión de Clientes y Reportes.
-*   **Akerizz:** Inventario y Almacén.
+*   **Joshua:** Integración y configuración del repositorio.
+*   **Santy:** Frontend del portal de clientes.
+*   **Maria:** Especeialista Docker.
+*   **Fabiola:** Documentación técnica.
+*   **Akerizz:** Frontend del portal de personal interno.
