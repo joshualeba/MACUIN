@@ -60,6 +60,3 @@ Por favor, sigan estos pasos para subir sus cambios y evitar conflictos:
 *   **Maria:** Catálogo y Carrito de Compras.
 *   **Fabiola:** Gestión de Clientes y Reportes.
 *   **Akerizz:** Inventario y Almacén.
-
----
-**Recuerda:** Siempre mantén tu autoría configurada antes de hacer un commit. ¡Buen trabajo equipo!
