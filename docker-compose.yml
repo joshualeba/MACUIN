@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  portal_clientes:
+    build:
+      context: ./portal_clientes
+    ports:
+      - "8005:80"
+    volumes:
+      - ./portal_clientes:/var/www/html
+
+  portal_admin:
+    build:
+      context: ./portal_admin
+    ports:
+      - "5005:5000"
+    volumes:
+      - ./portal_admin:/app
+    environment:
+      - FLASK_DEBUG=1
