@@ -1,0 +1,40 @@
+# MACUIN - .gitignore unificado
+
+# Python (Portal Admin)
+__pycache__/
+*.py[cod]
+*$py.class
+portal_admin/venv/
+portal_admin/.env
+
+# PHP / Laravel (Portal Clientes)
+portal_clientes/.pnp
+portal_clientes/.pnp.js
+portal_clientes/node_modules/
+portal_clientes/vendor/
+portal_clientes/.env
+portal_clientes/.env.backup
+portal_clientes/.env.production
+portal_clientes/composer.lock
+portal_clientes/public/hot
+portal_clientes/public/storage
+portal_clientes/storage/*.key
+portal_clientes/storage/framework/cache/data/*
+portal_clientes/storage/framework/sessions/*
+portal_clientes/storage/framework/testing/*
+portal_clientes/storage/framework/views/*
+portal_clientes/storage/logs/*.log
+portal_clientes/.phpunit.result.cache
+
+# Docker
+.docker/
+*.log
+
+# Windows / OS System
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# DB
+*.sqlite
+*.sql
