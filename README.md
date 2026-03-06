@@ -2,61 +2,62 @@
   <img src="logo_white.png" alt="Macuin Logo" width="300">
 </p>
 
-# MACUIN Autopartes
+# MACUIN autopartes
 
-Este es el repositorio central del sistema **MACUIN**, una plataforma para la gestión de autopartes, pedidos y clientes, diseñada para el **Segundo Parcial**. 🚀
+Este es el repositorio central del sistema **MACUIN**, una plataforma para la gestión de autopartes, pedidos y clientes. 🚀
 
 ## 📋 Descripción del proyecto
 MACUIN integra dos portales principales trabajando en conjunto mediante contenedores:
-1.  **Portal Administrativo (Flask):** Gestión interna de inventarios, pedidos y reportes.
-2.  **Portal de Clientes (Laravel):** Catálogo de productos y carrito de compras.
+1.  **Portal administrativo (Flask):** Gestión interna de inventarios, pedidos y reportes.
+2.  **Portal de clientes (Laravel):** Catálogo de productos y carrito de compras optimizado.
 
 ---
 
-## 🛠️ Guía de instalación para el equipo
-Para que el proyecto funcione en tu equipo local, sigue estos pasos detallados:
+## 🛠️ Guía de instalación rápida (Windows)
+Sigue estos pasos para instalar el proyecto desde cero y asegurar que funcione de forma fluida.
 
 ### 1. Requisitos previos
-*   Tener instalado **Docker Desktop**.
-*   Tener instalado **Git**.
+*   Instalar **Docker Desktop** (debe estar abierto).
+*   Instalar **Git**.
 
-### 2. Clonar el repositorio
-Abre una terminal y ejecuta el siguiente comando:
-```bash
-git clone https://github.com/joshualeba/macuin.git
-cd macuin
+### 2. Clonar el proyecto
+Abre una terminal (PowerShell) como administrador y ejecuta:
+```powershell
+git clone https://github.com/joshualeba/macuin.git C:\MACUIN
+cd C:\MACUIN
+copy portal_clientes\.env.example portal_clientes\.env
 ```
 
-### 3. Levantar los servidores
-No necesitas instalar Python ni PHP localmente, todo corre en los contenedores:
-```bash
-docker-compose up --build -d
-```
+### 3. Levantar servidores y configurar
+Ejecuta los siguientes comandos en orden para configurar el entorno optimizado:
 
-### 4. Accesos locales
-*   **Panel de administración:** [http://localhost:5005](http://localhost:5005)
-*   **Portal de clientes:** [http://localhost:8005](http://localhost:8005)
+```powershell
+# Levantar contenedores
+docker-compose up -d --build
+
+# Instalar dependencias de PHP (tardará unos minutos)
+docker-compose exec portal_clientes bash -c "curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && composer install"
+
+# Configurar carpetas y base de datos
+docker-compose exec portal_clientes mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
+docker-compose exec portal_clientes chmod -R 777 storage bootstrap/cache
+docker-compose exec portal_clientes php artisan key:generate
+docker-compose exec portal_clientes touch database/database.sqlite
+docker-compose exec portal_clientes php artisan migrate
+docker-compose exec portal_clientes chmod 777 database/database.sqlite
+```
 
 ---
 
-## 👨‍💻 Flujo de trabajo (Git Flow)
-Por favor, sigan estos pasos para subir sus cambios y evitar conflictos:
-
-1.  **Sincronizar:** `git pull origin develop`
-2.  **Nueva tarea:** `git checkout -b feature/HU_X.X`
-3.  **Configurar autor:**
-    *   `git config user.name "TuNombre"`
-    *   `git config user.email "tu@email.com"`
-4.  **Guardar y subir:**
-    *   `git add .`
-    *   `git commit -m "Descripción de la tarea"`
-    *   `git push origin feature/HU_X.X`
+## 🚀 Accesos locales
+*   **Portal de clientes:** [http://localhost:8005](http://localhost:8005)
+*   **Portal administrativo:** [http://localhost:5005](http://localhost:5005)
 
 ---
 
 ## 📅 Integrantes del equipo
 *   **Joshua:** Integración y configuración del repositorio.
 *   **Santy:** Frontend del portal de clientes.
-*   **Maria:** Especeialista Docker.
-*   **Fabiola:** Documentación técnica.
+*   **Maria:** Especialista Docker.
+*   **Fabiola:** Documentación técnica y aseguramiento de calidad.
 *   **Akerizz:** Frontend del portal de personal interno.
