@@ -2,7 +2,7 @@
   <img src="logo_white.png" alt="Macuin Logo" width="300">
 </p>
 
-# MACUIN Autopartes - Proyecto Integrador
+# MACUIN Autopartes
 
 Este es el repositorio central del sistema **MACUIN**, una plataforma para la gestión de autopartes, pedidos y clientes, diseñada para el **Segundo Parcial**. 🚀
 
