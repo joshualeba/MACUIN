@@ -3,6 +3,9 @@ FROM php:8.2-apache
 RUN apt-get update -y && apt-get install -y libzip-dev zip unzip git \
     && docker-php-ext-install pdo_mysql zip
 
+# Instalar Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
 RUN a2enmod rewrite
 
 # Actualizar el DocumentRoot a la carpeta public de Laravel

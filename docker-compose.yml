@@ -18,6 +18,16 @@ services:
       - ./portal_admin:/app
     environment:
       - FLASK_DEBUG=1
+      - API_URL=http://api_central:8008
+
+  api_central:
+    build:
+      context: ./api_central
+    ports:
+      - "8008:8008"
+    volumes:
+      - ./api_central:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8008 --reload
 
 volumes:
   portal_vendor:
