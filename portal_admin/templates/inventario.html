@@ -9,6 +9,39 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 2.5rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .inv-header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        flex: 1;
+    }
+
+    .btn-add-product {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.4rem;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-add-product:hover {
+        background: #3730A3;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
     }
 
     .inv-header h1 {
@@ -48,6 +81,54 @@
         border-color: var(--accent);
         box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
     }
+
+    /* Estilos de Vista Previa */
+    .image-preview-container {
+        width: 100%;
+        height: 180px;
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        background: var(--bg-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        overflow: hidden;
+        transition: 0.3s;
+        position: relative;
+    }
+    .image-preview-container:hover { border-color: var(--accent); background: rgba(99, 102, 241, 0.05); }
+    .image-preview-container img { width: 100%; height: 100%; object-fit: cover; }
+    .image-preview-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-muted);
+        text-align: center;
+        padding: 1rem;
+    }
+    .image-preview-placeholder i { font-size: 2rem; }
+    .image-preview-placeholder span { font-size: 0.75rem; font-weight: 700; }
+
+    /* Indicador de carga en botón */
+    .btn-loading {
+        pointer-events: none;
+        opacity: 0.8;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-loading::after {
+        content: '';
+        width: 14px;
+        height: 14px;
+        border: 2px solid white;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin-loader 0.6s linear infinite;
+    }
+    @keyframes spin-loader { to { transform: rotate(360deg); } }
 
     /* Category Filters */
     .cat-filters {
@@ -194,11 +275,38 @@
         border-color: var(--accent);
     }
 
+    .btn-delete {
+        background: var(--bg-light);
+        border: 1px solid var(--border);
+        color: var(--danger);
+        padding: 0.6rem 1rem;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-delete:hover {
+        background: var(--danger);
+        color: white;
+        border-color: var(--danger);
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
     /* Form Styles within Modal */
     .edit-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1.25rem;
+        text-align: left;
     }
 
     .full-width {
@@ -301,6 +409,8 @@
     .toggle-label {
         font-weight: 700;
         font-size: 0.9rem;
+        color: var(--text-main);
+        min-width: 90px;  /* evita layout shift al cambiar entre "Activo" y "Deshabilitado" */
     }
 
     .switch {
@@ -347,20 +457,91 @@
     input:checked+.slider:before {
         transform: translateX(22px);
     }
+    .btn-download { 
+        display: flex; 
+        align-items: center; 
+        gap: 0.75rem; 
+        padding: 0.75rem 1.5rem; 
+        border-radius: 12px; 
+        background: var(--card-bg); 
+        color: var(--text-main); 
+        border: 1px solid var(--border); 
+        font-weight: 700; 
+        cursor: pointer; 
+        transition: 0.3s; 
+        font-size: 0.85rem; 
+    }
+    .btn-download:hover { 
+        background: var(--bg-light); 
+        border-color: var(--accent); 
+    }
+    .download-dropdown { position: relative; display: inline-block; }
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: var(--card-bg);
+        min-width: 170px;
+        box-shadow: 0px 10px 20px 0px rgba(0,0,0,0.1);
+        z-index: 1000;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        margin-top: 5px;
+        overflow: hidden;
+    }
+    .dropdown-content button {
+        color: var(--text-main);
+        padding: 12px 16px;
+        display: block;
+        width: 100%;
+        border: none;
+        background: none;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .dropdown-content button:hover { background-color: var(--bg-light); color: var(--accent); }
+    .show-dropdown { display: block !important; }
 </style>
 {% endblock %}
 
 {% block admin_content %}
 <div class="inv-header">
-    <h1>Gestión de inventario</h1>
-    <div class="search-bar">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre o ID..."
-            onkeyup="applyFilters()">
+    <div class="inv-header-left">
+        <h1>Gestión de inventario</h1>
+        <div class="search-bar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre o ID..."
+                onkeyup="applyFilters()">
+        </div>
+        <button class="btn-download" style="background: var(--bg-light); border-color: var(--border);" onclick="openFilterModal()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 3H2L10 12.46V19L14 21V12.46L22 3Z"></path></svg>
+            Filtros
+        </button>
+        <div class="download-dropdown">
+            <button class="btn-download" onclick="toggleDownloadMenu()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Descargar inventario
+            </button>
+            <div id="downloadMenu" class="dropdown-content">
+                <button onclick="downloadInventory('pdf')">Documento PDF (.pdf)</button>
+                <button onclick="downloadInventory('xlsx')">Hoja de cálculo (.xlsx)</button>
+                <button onclick="downloadInventory('docx')">Documento Word (.docx)</button>
+            </div>
+        </div>
     </div>
+    <button class="btn-add-product" onclick="openAddProductModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Agregar producto
+    </button>
 </div>
 
 <div class="cat-filters">
@@ -387,38 +568,23 @@
 </div>
 
 <script>
-    const productos = [
-        { id: 1, nombre: 'Amortiguador de gas premium', precio: '1450', stock: 15, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803583/1_mum70h.jpg', desc: 'Vuelve tu auto estable ante los baches y elimina el balanceo por completo.', cat: 'suspension', active: true },
-        { id: 2, nombre: 'Batería automotriz 12V LTH', precio: '2300', stock: 45, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803604/2_gv1kb4.jpg', desc: 'Arranque seguro bajo cualquier clima con celdas de alta duración.', cat: 'electrico', active: true },
-        { id: 3, nombre: 'Llanta deportiva de alto rendimiento', precio: '1850', stock: 3, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803583/3_jhe3ti.jpg', desc: 'Maximiza el agarre y la tracción en cualquier condición de pista o lluvia.', cat: 'suspension', active: true },
-        { id: 4, nombre: 'Filtro de aceite sintético', precio: '250', stock: 12, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803583/4_rejzkf.jpg', desc: 'Atrapa hasta el 99% de las partículas contaminantes del motor.', cat: 'motor', active: true },
-        { id: 5, nombre: 'Juego de balatas cerámicas', precio: '750', stock: 25, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803583/5_xqmuur.jpg', desc: 'Frenado silencioso, libre de asbesto y ultra seguro.', cat: 'frenos', active: true },
-        { id: 6, nombre: 'Faros LED de largo alcance', precio: '1200', stock: 8, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803611/6_wcpptk.jpg', desc: 'Iluminación nítida con más de 10,000 lúmenes de potencia para carretera.', cat: 'electrico', active: true },
-        { id: 7, nombre: 'Radiador de aluminio reforzado', precio: '2100', stock: 5, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803582/7_nrnjsu.jpg', desc: 'Sistema de enfriamiento superior para prevenir sobrecalentamientos.', cat: 'motor', active: true },
-        { id: 8, nombre: 'Bomba de agua de alto flujo', precio: '850', stock: 18, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803601/8_djl9tm.jpg', desc: 'Mantiene un flujo constante y óptimo del refrigerante.', cat: 'motor', active: true },
-        { id: 9, nombre: 'Kit de distribución completo', precio: '3400', stock: 2, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803605/9_o22arl.jpg', desc: 'Sincronización perfecta del motor, incluye banda, tensor y polea.', cat: 'motor', active: true },
-        { id: 10, nombre: 'Sensor de oxígeno Denso', precio: '950', stock: 10, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803583/10_xqowdm.jpg', desc: 'Optimiza el consumo de combustible midiendo la mezcla de gases.', cat: 'electrico', active: true },
-        { id: 11, nombre: 'Inyector de combustible 4 puertos', precio: '1100', stock: 15, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803583/11_n3roer.jpg', desc: 'Pulverización exacta para aprovechar cada gota de gasolina.', cat: 'motor', active: true },
-        { id: 12, nombre: 'Bobina de encendido', precio: '600', stock: 30, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803587/12_dbimni.jpg', desc: 'Proporciona la chispa con voltaje ideal para la ignición.', cat: 'electrico', active: true },
-        { id: 13, nombre: 'Bujía láser de Iridio', precio: '250', stock: 100, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803615/13_q15jp9.jpg', desc: 'Encendido instantáneo y ahorro de combustible con punta fina.', cat: 'electrico', active: true },
-        { id: 14, nombre: 'Alternador 12V', precio: '2800', stock: 4, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803612/14_cx1b8o.jpg', desc: 'Generador de energía probado para abastecer todos los accesorios eléctricos.', cat: 'electrico', active: true },
-        { id: 15, nombre: 'Marcha de arranque', precio: '1900', stock: 7, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803600/15_ojqtbz.jpg', desc: 'Engrane preciso y potente para iniciar tu motor suavemente.', cat: 'electrico', active: true },
-        { id: 16, nombre: 'Compresor A/C', precio: '3600', stock: 3, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803605/16_jfkbtw.jpg', desc: 'Refrigera tu cabina al instante incluso en días extremadamente soleados.', cat: 'motor', active: true },
-        { id: 17, nombre: 'Condensador A/C', precio: '1400', stock: 8, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803610/17_lele1h.jpg', desc: 'Disipa el calor del refrigerante de manera altamente eficiente.', cat: 'motor', active: true },
-        { id: 18, nombre: 'Filtro de aire alto flujo', precio: '550', stock: 20, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803587/18_iohp0d.jpg', desc: 'Cónico y lavable, otorga caballos de fuerza y sonido deportivo.', cat: 'motor', active: true },
-        { id: 19, nombre: 'Filtro de cabina carbón', precio: '350', stock: 35, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803587/19_arzsz1.jpg', desc: 'Respira aire purificado bloqueando humo y olores.', cat: 'motor', active: true },
-        { id: 20, nombre: 'Embrague completo', precio: '2900', stock: 5, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803588/20_zgaqnp.jpg', desc: 'Cambios de velocidad precisos y suaves como nuevo.', cat: 'motor', active: true },
-        { id: 21, nombre: 'Bomba gasolina eléctrica', precio: '1250', stock: 12, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803582/21_g4odld.jpg', desc: 'Entrega constante y silenciosa de presión al riel.', cat: 'motor', active: true },
-        { id: 22, nombre: 'Rótula de suspensión', precio: '480', stock: 22, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803562/22_riq9wk.jpg', desc: 'Soporta movimientos bruscos manteniendo firme la dirección.', cat: 'suspension', active: true },
-        { id: 23, nombre: 'Terminal de dirección', precio: '320', stock: 16, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803609/23_gzgzka.jpg', desc: 'Protege la alineación de tu auto frente a baches.', cat: 'suspension', active: true },
-        { id: 24, nombre: 'Tornillo estabilizador', precio: '250', stock: 28, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803609/24_rak6t6.jpg', desc: 'Conecta la barra estabilizadora evitando ruidos.', cat: 'suspension', active: true },
-        { id: 25, nombre: 'Caliper de freno', precio: '1600', stock: 4, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803613/25_cjcn0h.jpg', desc: 'Muerde fuertemente el disco otorgando frenadas de pánico.', cat: 'frenos', active: true },
-        { id: 26, nombre: 'Rotor de disco de freno', precio: '950', stock: 11, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803589/26_xj1orj.jpg', desc: 'Ventilado para evitar alabeo en pendientes.', cat: 'frenos', active: true },
-        { id: 27, nombre: 'Válvula PCV', precio: '180', stock: 42, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803599/27_hmbamh.jpg', desc: 'Libera la presión de gases nocivos cuidando los sellos.', cat: 'motor', active: true },
-        { id: 28, nombre: 'Empaque de cabeza', precio: '850', stock: 7, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803600/28_cul7ox.jpg', desc: 'Sella a la perfección soportando altas presiones termales.', cat: 'motor', active: true },
-        { id: 29, nombre: 'Sensor MAF', precio: '1150', stock: 6, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803604/29_tv6npk.jpg', desc: 'Mide con precisión la masa de aire que respira el motor.', cat: 'electrico', active: true },
-        { id: 30, nombre: 'Módulo ABS', precio: '4500', stock: 1, img: 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803582/30_gvgpfh.jpg', desc: 'El cerebro para frenar sin bloquear ruedas.', cat: 'frenos', active: true }
-    ];
+    let productos = [];
+
+    // Llamada inicial para cargar productos
+    async function loadProducts() {
+        try {
+            // Se usa el puerto de la API central o una ruta configurada
+            const response = await fetch('http://127.0.0.1:8008/productos/');
+            if(response.ok) {
+                productos = await response.json();
+                applyFilters();
+            } else {
+                console.error("Error al cargar productos", response.status);
+            }
+        } catch(error) {
+            console.error("Error de conexión con la API Cental", error);
+        }
+    }
 
     function renderTable(data) {
         const tbody = document.querySelector('#inventoryTable tbody');
@@ -432,7 +598,7 @@
             tr.innerHTML = `
                 <td>
                     <div class="product-cell">
-                        <img src="${p.img}" class="product-thumb">
+                        <img src="${p.imagen}" class="product-thumb">
                         <div class="product-info">
                             <strong>${p.nombre}</strong>
                             <span>REF-${String(p.id).padStart(4, '0')}</span>
@@ -443,13 +609,46 @@
                 <td><span class="stock-badge ${stockClass}">${p.stock} pz</span></td>
                 <td><span style="font-weight: 800; color: ${stateColor}; font-size: 0.8rem; text-transform: uppercase;">${stateText}</span></td>
                 <td>
-                    <button class="btn-edit" onclick="openProductEditor(${p.id})">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        Editar
-                    </button>
+                    <div class="btn-group">
+                        <button class="btn-edit" onclick="openProductEditor(${p.id})">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            Editar
+                        </button>
+                        <button class="btn-delete" onclick="confirmDeleteProduct(${p.id}, '${p.nombre}')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
+        });
+    }
+
+    function confirmDeleteProduct(id, nombre) {
+        showAppModal({
+            title: 'Eliminar producto',
+            body: '¿Estás seguro que deseas eliminar el producto: ' + nombre + '? Esta acción no se puede deshacer.',
+            icon: 'alert',
+            confirmText: 'Sí, eliminar',
+            type: 'danger',
+            onConfirm: async () => {
+                try {
+                    const res = await fetch('http://127.0.0.1:8008/productos/' + id, {
+                        method: 'DELETE'
+                    });
+                    if (res.ok) {
+                        productos = productos.filter(p => p.id !== id);
+                        applyFilters();
+                        showAppModal({
+                            title: 'Producto eliminado',
+                            body: 'El producto ha sido eliminado del catálogo permanentemente.',
+                            icon: 'help', confirmText: 'Aceptar', singleButton: true
+                        });
+                    }
+                } catch(e) {
+                    console.error(e);
+                }
+            }
         });
     }
 
@@ -457,53 +656,72 @@
         const p = productos.find(x => x.id === id);
 
         const editorHtml = `
-            <div class="edit-grid">
-                <div class="field-group full-width">
-                    <label>Imagen del producto</label>
-                    <div class="img-preview-box" id="imgBox" style="background-image: url('${p.img}')">
-                        <label class="upload-overlay">
-                            CAMBIAR IMAGEN
-                            <input type="file" id="p-file" style="display:none;" accept="image/*" onchange="previewLocalImage(this)">
-                        </label>
+            <div class="edit-grid" style="gap: 2rem; align-items: stretch;">
+                <!-- Columna Izquierda -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div class="field-group">
+                        <label>Nombre del producto</label>
+                        <input type="text" id="p-name" class="field-input" value="${p.nombre}" placeholder="Ej: Amortiguador de gas" onkeypress="return /[a-zA-ZáéíóúÁÉÍÓÚñÑ ]/.test(event.key)">
                     </div>
-                    <div class="img-inputs-container">
-                        <input type="text" id="p-img" class="field-input" value="${p.img}" placeholder="URL de la imagen" oninput="document.getElementById('imgBox').style.backgroundImage='url('+this.value+')'">
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="field-group">
+                            <label>Precio (MXN)</label>
+                            <input type="text" id="p-price" class="field-input" value="${p.precio}" placeholder="Ej: 1450" onkeypress="return /[0-9]/.test(event.key)">
+                        </div>
+                        <div class="field-group">
+                            <label>Stock actual</label>
+                            <input type="text" id="p-stock" class="field-input" value="${p.stock}" placeholder="Ej: 15" onkeypress="return /[0-9]/.test(event.key)">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="field-group">
+                            <label>Categoría</label>
+                            <select id="p-cat" class="field-select">
+                                <option value="motor" ${p.cat === 'motor' ? 'selected' : ''}>Motor</option>
+                                <option value="frenos" ${p.cat === 'frenos' ? 'selected' : ''}>Frenos</option>
+                                <option value="suspension" ${p.cat === 'suspension' ? 'selected' : ''}>Suspensión</option>
+                                <option value="electrico" ${p.cat === 'electrico' ? 'selected' : ''}>Eléctrico</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label>Estado en catálogo</label>
+                            <div class="toggle-row">
+                                <span class="toggle-label" id="status-label">${p.active ? 'Activo' : 'Deshabilitado'}</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="p-active" ${p.active ? 'checked' : ''} onchange="document.getElementById('status-label').innerText = this.checked ? 'Activo' : 'Deshabilitado'">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Descripción breve</label>
+                        <textarea id="p-desc-breve" class="field-area" rows="3" placeholder="Resumen corto del producto...">${p.desc_breve || ''}</textarea>
                     </div>
                 </div>
-                <div class="field-group full-width">
-                    <label>Nombre del producto</label>
-                    <input type="text" id="p-name" class="field-input" value="${p.nombre}" placeholder="Ej: Amortiguador de gas" onkeypress="return /[a-zA-ZáéíóúÁÉÍÓÚñÑ ]/.test(event.key)">
-                </div>
-                <div class="field-group">
-                    <label>Categoría</label>
-                    <select id="p-cat" class="field-select">
-                        <option value="motor" ${p.cat === 'motor' ? 'selected' : ''}>Motor</option>
-                        <option value="frenos" ${p.cat === 'frenos' ? 'selected' : ''}>Frenos</option>
-                        <option value="suspension" ${p.cat === 'suspension' ? 'selected' : ''}>Suspensión</option>
-                        <option value="electrico" ${p.cat === 'electrico' ? 'selected' : ''}>Eléctrico</option>
-                    </select>
-                </div>
-                <div class="field-group">
-                    <label>Precio (MXN)</label>
-                    <input type="text" id="p-price" class="field-input" value="${p.precio}" placeholder="Ej: 1450" onkeypress="return /[0-9]/.test(event.key)">
-                </div>
-                <div class="field-group">
-                    <label>Stock actual</label>
-                    <input type="text" id="p-stock" class="field-input" value="${p.stock}" placeholder="Ej: 15" onkeypress="return /[0-9]/.test(event.key)">
-                </div>
-                <div class="field-group">
-                    <label>Estado en catálogo</label>
-                    <div class="toggle-row">
-                        <span class="toggle-label" id="status-label">${p.active ? 'Activo' : 'Deshabilitado'}</span>
-                        <label class="switch">
-                            <input type="checkbox" id="p-active" ${p.active ? 'checked' : ''} onchange="document.getElementById('status-label').innerText = this.checked ? 'Activo' : 'Deshabilitado'">
-                            <span class="slider"></span>
-                        </label>
+
+                <!-- Columna Derecha -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div class="field-group">
+                        <label>Imagen del producto</label>
+                        <div class="img-preview-box" id="imgBox" style="background-image: url('${p.imagen}'); height: 210px;">
+                            <label class="upload-overlay">
+                                Cambiar imagen
+                                <input type="file" id="p-file" style="display:none;" accept="image/*" onchange="previewLocalImage(this)">
+                            </label>
+                        </div>
+                        <div class="img-inputs-container">
+                            <input type="text" id="p-img" class="field-input" value="${p.imagen}" placeholder="URL de la imagen" oninput="document.getElementById('imgBox').style.backgroundImage='url('+this.value+')'">
+                        </div>
                     </div>
-                </div>
-                <div class="field-group full-width">
-                    <label>Descripción completa</label>
-                    <textarea id="p-desc" class="field-area" rows="3" placeholder="Describe los beneficios técnicos...">${p.desc}</textarea>
+
+                    <div class="field-group" style="flex-grow: 1;">
+                        <label>Descripción completa</label>
+                        <textarea id="p-desc-completa" class="field-area" style="height: 100%; min-height: 180px;" placeholder="Describe todos los beneficios técnicos a detalle...">${p.desc_completa || ''}</textarea>
+                    </div>
                 </div>
             </div>
         `;
@@ -513,18 +731,20 @@
             htmlContent: editorHtml,
             icon: 'edit',
             confirmText: 'Guardar cambios',
-            keepOpen: true, // Para manejar la validación manual
-            onConfirm: () => {
+            keepOpen: true,
+            wide: true, // Esto expande el modal horizontalmente
+            onConfirm: async () => {
                 const name = document.getElementById('p-name').value.trim();
                 const price = document.getElementById('p-price').value.trim();
                 const stock = document.getElementById('p-stock').value.trim();
-                const desc = document.getElementById('p-desc').value.trim();
+                const desc_breve = document.getElementById('p-desc-breve').value.trim();
+                const desc_completa = document.getElementById('p-desc-completa').value.trim();
                 const img = document.getElementById('p-img').value.trim();
                 const cat = document.getElementById('p-cat').value;
                 const active = document.getElementById('p-active').checked;
 
                 // Validación de campos vacíos
-                if (!name || !price || !stock || !desc || !img) {
+                if (!name || !price || !stock || !desc_breve || !desc_completa || !img) {
                     showAppModal({
                         title: 'Campos incompletos',
                         body: 'Atención: Debes rellenar todos los campos correctamente antes de guardar.',
@@ -536,25 +756,51 @@
                     return;
                 }
 
-                // Guardado simualdo
-                p.nombre = name;
-                p.precio = price;
-                p.stock = parseInt(stock);
-                p.desc = desc;
-                p.img = img;
-                p.cat = cat;
-                p.active = active;
+                // Guardado por medio de la API central
+                const updatedData = {
+                    nombre: name,
+                    precio: price,
+                    stock: parseInt(stock),
+                    desc_breve: desc_breve,
+                    desc_completa: desc_completa,
+                    imagen: img,
+                    cat: cat,
+                    active: active
+                };
 
-                renderTable(productos);
-                closeModal();
-
-                setTimeout(() => {
-                    showAppModal({
-                        title: '¡Cambios aplicados!',
-                        body: 'La información de ' + name + ' ha sido actualizada correctamente en el inventario.',
-                        icon: 'help', confirmText: 'Excelente', singleButton: true
+                try {
+                    const res = await fetch('http://127.0.0.1:8008/productos/' + p.id, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updatedData)
                     });
-                }, 350);
+
+                    if (res.ok) {
+                        // Actualizar en el frontend actual
+                        Object.assign(p, updatedData);
+                        applyFilters();
+                        closeModal();
+
+                        setTimeout(() => {
+                            showAppModal({
+                                title: '¡Cambios aplicados!',
+                                body: 'La información de ' + name + ' ha sido actualizada correctamente en el inventario global.',
+                                icon: 'help', confirmText: 'Excelente', singleButton: true
+                            });
+                        }, 350);
+                    } else {
+                        throw new Error("Respuesta no OK");
+                    }
+                } catch(e) {
+                    console.error(e);
+                    showAppModal({
+                        title: 'Error de conexión',
+                        body: 'No se pudo contactar a la API central para actualizar el producto.',
+                        icon: 'alert', confirmText: 'Entendido', singleButton: true, type: 'danger'
+                    });
+                }
             }
         });
     }
@@ -579,16 +825,455 @@
         applyFilters();
     }
 
+    function openFilterModal() {
+        const modalHtml = `
+            <div style="text-align: left;">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem;">Ajusta el rango de precios para segmentar el catálogo de autopartes.</p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="field-group">
+                        <label>Precio mínimo (MXN)</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--text-muted);">$</span>
+                            <input type="number" id="m-priceMin" class="field-input" style="padding-left: 2rem;" placeholder="0" value="${document.getElementById('priceMin_val')?.value || ''}">
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>Precio máximo (MXN)</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--text-muted);">$</span>
+                            <input type="number" id="m-priceMax" class="field-input" style="padding-left: 2rem;" placeholder="Sin límite" value="${document.getElementById('priceMax_val')?.value || ''}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section-title">Categorías Rápidas</div>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; margin-bottom: 2rem;">
+                    <button class="cat-btn ${currentCategory === 'all' ? 'active' : ''}" onclick="m_setCat('all', this)">Todo</button>
+                    <button class="cat-btn ${currentCategory === 'motor' ? 'active' : ''}" onclick="m_setCat('motor', this)">Motor</button>
+                    <button class="cat-btn ${currentCategory === 'frenos' ? 'active' : ''}" onclick="m_setCat('frenos', this)">Frenos</button>
+                    <button class="cat-btn ${currentCategory === 'electrico' ? 'active' : ''}" onclick="m_setCat('electrico', this)">Eléctrico</button>
+                    <button class="cat-btn ${currentCategory === 'suspension' ? 'active' : ''}" onclick="m_setCat('suspension', this)">Suspensión</button>
+                </div>
+
+                <div class="detail-section-title">Segmentos de Inversión</div>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+                    <button class="cat-btn" onclick="m_quickStock(5)">Stock bajo (< 5)</button>
+                    <button class="cat-btn" onclick="m_quickPriceRange(0, 1000)">Esenciales (< $1k)</button>
+                    <button class="cat-btn" onclick="m_quickPriceRange(2500, null)">Gama Alta (> $2.5k)</button>
+                    <button class="cat-btn" style="border-color: var(--danger); color: var(--danger); background: transparent;" onclick="resetFilters()">Limpiar filtros</button>
+                </div>
+
+                <input type="hidden" id="priceMin_val" value="${document.getElementById('priceMin_val')?.value || ''}">
+                <input type="hidden" id="priceMax_val" value="${document.getElementById('priceMax_val')?.value || ''}">
+            </div>
+        `;
+
+        showAppModal({
+            title: 'Filtrar inventario',
+            htmlContent: modalHtml,
+            icon: 'edit',
+            confirmText: 'Aplicar segmentación',
+            onConfirm: () => {
+                document.getElementById('priceMin_val').value = document.getElementById('m-priceMin').value;
+                document.getElementById('priceMax_val').value = document.getElementById('m-priceMax').value;
+                applyFilters();
+            }
+        });
+    }
+
+    function m_setCat(cat, btn) {
+        currentCategory = cat;
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        // Actualizar la UI principal también
+        document.querySelectorAll('.cat-filters .cat-btn').forEach(b => {
+             const text = b.innerText.toLowerCase();
+             const isMatch = (cat === 'all' && text.includes('todos')) || 
+                           (cat === 'motor' && text.includes('motor')) ||
+                           (cat === 'frenos' && text.includes('frenos')) ||
+                           (cat === 'electrico' && text.includes('eléctrico')) ||
+                           (cat === 'suspension' && text.includes('suspensión'));
+             b.classList.toggle('active', isMatch);
+        });
+    }
+
+    function m_quickStock(limit) {
+        window.tempStockLimit = limit;
+        applyFilters(); 
+        closeModal();
+    }
+
+    function m_quickPriceRange(min, max) {
+        document.getElementById('m-priceMin').value = min || '';
+        document.getElementById('m-priceMax').value = max || '';
+    }
+
+    function resetFilters() {
+        currentCategory = 'all';
+        document.getElementById('priceMin_val').value = '';
+        document.getElementById('priceMax_val').value = '';
+        document.getElementById('searchInput').value = '';
+        window.tempStockLimit = null;
+        applyFilters();
+        closeModal();
+    }
+
     function applyFilters() {
         const term = document.getElementById('searchInput').value.toLowerCase();
+        const minPrice = parseFloat(document.getElementById('priceMin_val')?.value) || 0;
+        const maxPrice = parseFloat(document.getElementById('priceMax_val')?.value) || Infinity;
+        const stockLimit = window.tempStockLimit || Infinity;
+        
         const filtered = productos.filter(p => {
             const matchesTerm = p.nombre.toLowerCase().includes(term) || String(p.id).includes(term);
             const matchesCat = currentCategory === 'all' || p.cat === currentCategory;
-            return matchesTerm && matchesCat;
+            const itemPrice = parseFloat(String(p.precio).replace(/[^0-9.]/g, ''));
+            const matchesPrice = itemPrice >= minPrice && itemPrice <= maxPrice;
+            const matchesStock = p.stock <= stockLimit;
+            
+            return matchesTerm && matchesCat && matchesPrice && matchesStock;
         });
+        
+        window.filteredProducts = filtered;
         renderTable(filtered);
     }
 
-    renderTable(productos);
+    // ─────────────── CONFIGURACIÓN DE CLOUDINARY ───────────────
+    // Sustituye estos valores con los de tu cuenta de Cloudinary:
+    const CLOUDINARY_CLOUD_NAME = 'dpvm2gro2';
+    const CLOUDINARY_UPLOAD_PRESET = 'macuin_unsigned';
+    const CLOUDINARY_FOLDER = 'MACUIN';
+
+    async function uploadToCloudinary(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        formData.append('folder', CLOUDINARY_FOLDER);
+
+        const res = await fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+            { method: 'POST', body: formData }
+        );
+        if (!res.ok) throw new Error('Error al subir imagen a Cloudinary');
+        const data = await res.json();
+        return data.secure_url;
+    }
+
+    async function loadProducts() {
+        // 1. Cargar desde caché inmediatamente para velocidad instantánea
+        const cachedProducts = localStorage.getItem('macuin_inventory_cache');
+        if (cachedProducts) {
+            productos = JSON.parse(cachedProducts);
+            applyFilters();
+            // Ocultar loader si hay caché
+            const loader = document.getElementById('loader');
+            if (loader) loader.style.display = 'none';
+        }
+
+        try {
+            // 2. Consultar API en segundo plano
+            const res = await fetch('http://127.0.0.1:8008/productos/');
+            if (!res.ok) throw new Error('Error al conectar con la API');
+            const data = await res.json();
+            
+            // 3. Actualizar datos y caché
+            productos = data.map(p => ({
+                id: p.id,
+                nombre: p.nombre,
+                precio: parseFloat(String(p.precio).replace(/[^0-9.]/g, '')).toLocaleString('es-MX', { minimumFractionDigits: 2 }),
+                stock: p.stock,
+                cat: p.cat || 'motor',
+                desc_breve: p.desc_breve,
+                desc_completa: p.desc_completa,
+                imagen: p.imagen,
+                active: p.active
+            }));
+
+            localStorage.setItem('macuin_inventory_cache', JSON.stringify(productos));
+            
+            // Inyectamos placeholders si no existen
+            if (!document.getElementById('priceMin_val')) {
+                const fMin = document.createElement('input');
+                fMin.type = 'hidden'; fMin.id = 'priceMin_val';
+                document.body.appendChild(fMin);
+                
+                const fMax = document.createElement('input');
+                fMax.type = 'hidden'; fMax.id = 'priceMax_val';
+                document.body.appendChild(fMax);
+            }
+
+            applyFilters();
+
+            // Ocultar loader después de la carga real
+            const loader = document.getElementById('loader');
+            if (loader) loader.style.display = 'none';
+
+        } catch (e) {
+            console.error("Error cargando inventario:", e);
+            // Si no hay nada en caché y falla la API, mostrar error
+            if (!productos.length) {
+                showAppModal({
+                    title: 'Error de conexión',
+                    body: 'No pudimos obtener el inventario de la base de datos. Verifica tu conexión.',
+                    icon: 'alert', type: 'danger', singleButton: true
+                });
+            }
+        }
+    }
+
+    function openAddProductModal() {
+        let selectedFile = null;
+
+        const formHtml = `
+            <div class="edit-grid" style="gap: 2rem; align-items: stretch;">
+                <!-- Columna Izquierda -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div class="field-group">
+                        <label>Nombre del producto <span style="color:var(--danger);">*</span></label>
+                        <input type="text" id="new-name" class="field-input" placeholder="Ej: Amortiguador de gas">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="field-group">
+                            <label>Precio (MXN) <span style="color:var(--danger);">*</span></label>
+                            <input type="text" id="new-price" class="field-input" placeholder="Ej: 1450" onkeypress="return /[0-9]/.test(event.key)">
+                        </div>
+                        <div class="field-group">
+                            <label>Stock inicial <span style="color:var(--danger);">*</span></label>
+                            <input type="text" id="new-stock" class="field-input" placeholder="Ej: 15" onkeypress="return /[0-9]/.test(event.key)">
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Categoría <span style="color:var(--danger);">*</span></label>
+                        <select id="new-cat" class="field-select">
+                            <option value="motor">Motor</option>
+                            <option value="frenos">Frenos</option>
+                            <option value="suspension">Suspensión</option>
+                            <option value="electrico">Eléctrico</option>
+                        </select>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Descripción breve <span style="color:var(--danger);">*</span></label>
+                        <textarea id="new-desc-breve" class="field-area" rows="3" placeholder="Resumen corto del producto..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Columna Derecha -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div class="field-group">
+                        <label>Imagen del producto <span style="color:var(--danger);">*</span></label>
+                        <div class="img-preview-box" id="newImgBox" style="height: 210px; background-image: none; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+                            <label class="upload-overlay" style="cursor:pointer; height:100%; width:100%; display: flex; flex-direction:column; align-items: center; justify-content: center; gap:0.5rem; transition: 0.3s; background: rgba(0,0,0,0.02);">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                <span id="new-img-label" style="font-weight: 800; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Seleccionar imagen</span>
+                                <input type="file" id="new-img-file" style="display:none;" accept="image/*" onchange="previewNewImageInternal(this)">
+                            </label>
+                        </div>
+                        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                            La imagen se subirá automáticamente a Cloudinary.
+                        </p>
+                    </div>
+
+                    <div class="field-group" style="flex-grow: 1;">
+                        <label>Descripción completa <span style="color:var(--danger);">*</span></label>
+                        <textarea id="new-desc-completa" class="field-area" style="height: 100%; min-height: 160px;" placeholder="Describe todos los beneficios técnicos a detalle..."></textarea>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        showAppModal({
+            title: 'Agregar producto',
+            htmlContent: formHtml,
+            icon: 'edit',
+            confirmText: 'Guardar producto',
+            keepOpen: true,
+            wide: true,
+            onConfirm: async () => {
+                const nombre      = document.getElementById('new-name').value.trim();
+                const precio      = document.getElementById('new-price').value.trim();
+                const stock       = document.getElementById('new-stock').value.trim();
+                const cat         = document.getElementById('new-cat').value;
+                const desc_breve  = document.getElementById('new-desc-breve').value.trim();
+                const desc_completa = document.getElementById('new-desc-completa').value.trim();
+                const fileInput   = document.getElementById('new-img-file');
+                const file        = fileInput.files[0];
+
+                if (!nombre || !precio || !stock || !desc_breve || !desc_completa || !file) {
+                    showAppModal({
+                        title: 'Campos incompletos',
+                        body: 'Debes rellenar todos los campos y seleccionar una imagen antes de guardar.',
+                        icon: 'alert', type: 'danger', confirmText: 'Entendido', singleButton: true
+                    });
+                    return;
+                }
+
+                // Mostrar indicador de carga
+                const confirmBtn = document.querySelector('.modal-confirm-btn');
+                if (confirmBtn) { 
+                    confirmBtn.disabled = true; 
+                    confirmBtn.classList.add('btn-loading');
+                    confirmBtn.innerHTML = 'Subiendo imagen...'; 
+                }
+
+                try {
+                    // 1. Subir imagen a Cloudinary
+                    const imageUrl = await uploadToCloudinary(file);
+
+                    // 2. Crear producto en la API
+                    const res = await fetch('http://127.0.0.1:8008/productos/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            nombre, precio, stock: parseInt(stock),
+                            desc_breve, desc_completa,
+                            imagen: imageUrl, cat, active: true
+                        })
+                    });
+
+                    if (res.ok) {
+                        const newProduct = await res.json();
+                        productos.push(newProduct);
+                        applyFilters();
+                        closeModal();
+                        setTimeout(() => {
+                            showAppModal({
+                                title: '¡Producto agregado!',
+                                body: `"${nombre}" fue registrado exitosamente en el catálogo.`,
+                                icon: 'help', confirmText: 'Excelente', singleButton: true
+                            });
+                        }, 350);
+                    } else {
+                        const err = await res.json();
+                        throw new Error(err.detail || 'Error al guardar el producto');
+                    }
+                } catch(e) {
+                    showAppModal({
+                        title: 'Error de subida',
+                        body: 'No pudimos procesar la imagen. Verifica que el archivo sea menor a 5MB e inténtalo de nuevo.',
+                        icon: 'alert', type: 'danger', confirmText: 'Entendido', singleButton: true, keepOpen: true
+                    });
+                    if (confirmBtn) { 
+                        confirmBtn.disabled = false; 
+                        confirmBtn.classList.remove('btn-loading');
+                        confirmBtn.innerHTML = 'Guardar producto'; 
+                    }
+                }
+            }
+        });
+    }
+
+    function previewNewImageInternal(input) {
+        const box = document.getElementById('newImgBox');
+        const label = document.getElementById('new-img-label');
+        const overlay = box.querySelector('.upload-overlay');
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                box.style.backgroundImage = `url(${e.target.result})`;
+                label.innerText = 'IMAGEN SELECCIONADA';
+                overlay.style.background = 'rgba(0,0,0,0.4)';
+                overlay.style.color = 'white';
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function handleImagePreview(input) {
+        // Redirigir a la función interna
+        previewNewImageInternal(input);
+    }
+
+    function toggleDownloadMenu() {
+        document.getElementById("downloadMenu").classList.toggle("show-dropdown");
+    }
+
+    window.onclick = function(event) {
+        if (!event.target.closest('.download-dropdown')) {
+            const dropdowns = document.getElementsByClassName("dropdown-content");
+            for (let i = 0; i < dropdowns.length; i++) {
+                const openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show-dropdown')) {
+                    openDropdown.classList.remove('show-dropdown');
+                }
+            }
+        }
+    }
+
+    function downloadInventory(type = 'pdf') {
+        const dataToExport = window.filteredProducts || productos;
+        if (dataToExport.length === 0) return;
+        const dateKey = new Date().toISOString().substring(0, 10);
+        const filename = `inventario_macuin_${dateKey}`;
+
+        if (type === 'pdf') {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFillColor(10, 10, 31);
+            doc.rect(0, 0, 210, 25, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16); doc.setFont("helvetica", "bold");
+            doc.text("MACUIN - REPORTE DE INVENTARIO", 15, 16);
+
+            const body = dataToExport.map(p => [p.id, p.nombre, p.cat, `$${p.precio}`, `${p.stock} pz`]);
+            doc.autoTable({
+                head: [['ID', 'Producto', 'Categoría', 'Precio', 'Stock']],
+                body: body,
+                startY: 30,
+                headStyles: { fillColor: [10, 10, 31] }
+            });
+            doc.save(`${filename}.pdf`);
+        } else if (type === 'xlsx') {
+            const data = dataToExport.map(p => ({ "ID": p.id, "Producto": p.nombre, "Categoría": p.cat, "Precio (MXN)": p.precio, "Stock": p.stock }));
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Inventario");
+            XLSX.writeFile(wb, `${filename}.xlsx`);
+        } else if (type === 'docx') {
+            if (!window.docx) return;
+            const { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType } = window.docx;
+            const rows = [new TableRow({ children: ["ID", "Producto", "Stock"].map(h => new TableCell({ children: [new Paragraph({ text: h })] })) })];
+            dataToExport.forEach(p => rows.push(new TableRow({ children: [
+                new TableCell({ children: [new Paragraph({ text: String(p.id) })] }), 
+                new TableCell({ children: [new Paragraph({ text: p.nombre })] }), 
+                new TableCell({ children: [new Paragraph({ text: String(p.stock) })] })
+            ]})));
+            const doc = new Document({ 
+                sections: [{ 
+                    children: [
+                        new Paragraph({ text: "INVENTARIO MACUIN", heading: "Heading1" }), 
+                        new Paragraph({ text: `Fecha: ${new Date().toLocaleDateString()}` }),
+                        new Paragraph({ text: "" }),
+                        new Table({ 
+                            width: { size: 100, type: WidthType.PERCENTAGE }, 
+                            rows: rows,
+                            borders: {
+                                top: { style: "single", size: 1 },
+                                bottom: { style: "single", size: 1 },
+                                left: { style: "single", size: 1 },
+                                right: { style: "single", size: 1 }
+                            }
+                        })
+                    ] 
+                }] 
+            });
+            Packer.toBlob(doc).then(blob => {
+                window.saveAs(blob, `${filename}.docx`);
+            });
+        }
+    }
+
+    // Inicializar llamando a la API
+    loadProducts();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 {% endblock %}

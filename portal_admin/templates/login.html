@@ -193,7 +193,7 @@
             <h2>Panel administrativo</h2>
             <p class="subtitle">Acceso exclusivo para personal interno de MACUIN.</p>
 
-            <form action="/dashboard" method="GET">
+            <form id="admin-login-form" action="/dashboard" method="GET">
                 <div class="input-group">
                     <label>Correo electrónico empresarial</label>
                     <input type="email" class="input-control" placeholder="admin@macuin.com" required>
@@ -203,13 +203,9 @@
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
                         <label style="margin: 0;">Contraseña</label>
-                        <a href="#"
-                            style="font-size: 0.75rem; color: var(--accent); text-decoration: none; font-weight: 600;">¿Problemas
-                            de acceso?</a>
                     </div>
                     <div class="password-wrapper">
-                        <input type="password" class="input-control" id="admin-pass" placeholder="••••••••" required
-                            oninput="validatePassword(this.value)">
+                        <input type="password" class="input-control" id="admin-pass" placeholder="••••••••" required>
                         <button type="button" class="eye-btn" onclick="togglePassword('admin-pass', this)">
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -219,34 +215,6 @@
                         </button>
                     </div>
 
-                    <!-- Password Hooks -->
-                    <div class="password-validator"
-                        style="margin-top: 1.2rem; display: flex; flex-direction: column; gap: 0.6rem;">
-                        <div class="req-item" id="req-length"
-                            style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.8rem; color: #94A3B8; font-weight: 600;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="3">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                            Mínimo 8-25 caracteres
-                        </div>
-                        <div class="req-item" id="req-upper"
-                            style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.8rem; color: #94A3B8; font-weight: 600;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="3">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                            Mínimo una letra mayúscula
-                        </div>
-                        <div class="req-item" id="req-special"
-                            style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.8rem; color: #94A3B8; font-weight: 600;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="3">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                            Mínimo un carácter especial (@, #, $, etc.)
-                        </div>
-                    </div>
                 </div>
 
                 <button type="submit" id="login-submit" class="btn-login">
@@ -285,36 +253,97 @@
         }
     }
 
-    function validatePassword(pass) {
-        const hasLength = pass.length >= 8 && pass.length <= 25;
-        const hasUpper = /[A-Z]/.test(pass);
-        const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pass);
-
-        const applyStyle = (id, valid) => {
-            const el = document.getElementById(id);
-            el.style.color = valid ? '#10B981' : '#94A3B8';
-            el.querySelector('svg').style.stroke = valid ? '#10B981' : 'currentColor';
-        };
-
-        applyStyle('req-length', hasLength);
-        applyStyle('req-upper', hasUpper);
-        applyStyle('req-special', hasSpecial);
-
-        return hasLength && hasUpper && hasSpecial;
-    }
-
-    document.querySelector('form').addEventListener('submit', function (e) {
-        const pass = document.getElementById('admin-pass').value;
-        if (!validatePassword(pass)) {
+    const loginForm = document.getElementById('admin-login-form');
+    
+    // Soporte para tecla Enter
+    loginForm.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
             e.preventDefault();
+            document.getElementById('login-submit').click();
+        }
+    });
+
+    loginForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const email = document.querySelector('input[type="email"]').value.trim();
+        const password = document.getElementById('admin-pass').value;
+
+        if (!email || !password) {
             showAppModal({
-                title: 'Seguridad insuficiente',
-                body: 'Por políticas de Macuin, tu acceso administrativo requiere una contraseña que cumpla con todos los requisitos de complejidad.',
+                title: 'Campos requeridos',
+                body: 'Por favor, completa todos los campos para continuar.',
                 icon: 'alert',
                 type: 'danger',
                 singleButton: true
             });
+            return;
         }
+
+        // Validación estricta de correo
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(email)) {
+            showAppModal({
+                title: 'Correo inválido',
+                body: 'El formato de tu correo empresarial no es correcto.',
+                icon: 'alert',
+                type: 'danger',
+                singleButton: true
+            });
+            return;
+        }
+
+        // Mostrar un pequeño indicador de carga si existiera, o deshabilitar botón
+        const submitBtn = document.getElementById('login-submit');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Procesando...';
+
+        // Llamada a la API Central con flag de administrador
+        fetch('http://localhost:8008/autenticacion/login?isAdmin=true', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        })
+        .then(async response => {
+            const result = await response.json();
+            if (response.ok) {
+                // Guardar datos del usuario para hacer dinámico el dashboard
+                localStorage.setItem('macuin_admin_user', JSON.stringify(result.user));
+                // Redirigir al dashboard si las credenciales son válidas
+                window.location.href = "/dashboard";
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Acceder al sistema <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>';
+                
+                let errorTitle = 'Acceso denegado';
+                if (result.detail && result.detail.includes('registrado')) errorTitle = 'Correo no registrado';
+                if (result.detail && result.detail.includes('Contraseña')) errorTitle = 'Contraseña incorrecta';
+                if (result.detail && result.detail.includes('desactivada')) errorTitle = 'Cuenta inactiva';
+
+                showAppModal({
+                    title: errorTitle,
+                    body: result.detail || 'Credenciales administrativas no válidas.',
+                    icon: 'alert',
+                    type: 'danger',
+                    singleButton: true
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Acceder al sistema <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>';
+            
+            showAppModal({
+                title: 'Error de conexión',
+                body: 'No se pudo contactar con la API central. Por favor, verifica tu conexión a internet.',
+                icon: 'alert',
+                type: 'danger',
+                singleButton: true
+            });
+        });
     });
 </script>
 {% endblock %}

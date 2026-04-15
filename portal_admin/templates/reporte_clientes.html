@@ -120,17 +120,20 @@
         gap: 0.75rem;
         padding: 0.75rem 1.5rem;
         border-radius: 12px;
-        background: var(--primary);
-        color: white;
-        border: none;
+        background: var(--card-bg);
+        color: var(--text-main);
+        border: 1px solid var(--border);
         font-weight: 700;
         cursor: pointer;
         transition: 0.3s;
+        font-size: 0.85rem;
     }
 
     .btn-download:hover {
+        background: var(--bg-light);
+        border-color: var(--accent);
         transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(10, 10, 31, 0.2);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
 
     .filter-area {
@@ -141,12 +144,62 @@
 
     .search-input {
         flex: 1;
-        padding: 0.75rem 1.2rem;
-        border-radius: 12px;
+        padding: 0.85rem 1rem 0.85rem 3rem;
+        background: var(--bg-light);
         border: 1px solid var(--border);
-        background: #F9FBFF;
+        border-radius: 14px;
+        color: var(--text-main);
+        font-size: 0.9rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         outline: none;
     }
+
+    .search-input::placeholder {
+        color: var(--text-muted);
+        opacity: 0.7;
+    }
+
+    .search-input:focus {
+        border-color: var(--accent);
+        background: var(--card-bg);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: var(--card-bg);
+        min-width: 160px;
+        box-shadow: 0px 10px 20px 0px rgba(0,0,0,0.1);
+        z-index: 1000;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        margin-top: 5px;
+        overflow: hidden;
+    }
+
+    .dropdown-content button {
+        color: var(--text-main);
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        width: 100%;
+        border: none;
+        background: none;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .dropdown-content button:hover {
+        background-color: var(--bg-light);
+        color: var(--accent);
+    }
+
+    .show-dropdown { display: block !important; }
 </style>
 {% endblock %}
 
@@ -156,6 +209,17 @@
         <div>
             <h2 style="margin: 0; font-size: 1.5rem;">Reporte de clientes</h2>
             <p style="color: var(--text-muted); margin-top: 0.25rem;">Análisis detallado de actividad y consumo.</p>
+        </div>
+        <div class="download-dropdown">
+            <button class="btn-download" onclick="toggleDownloadMenu()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Descargar reporte
+            </button>
+            <div id="downloadMenu" class="dropdown-content">
+                <button onclick="downloadAllReport('pdf')">Documento PDF (.pdf)</button>
+                <button onclick="downloadAllReport('xlsx')">Hoja de cálculo (.xlsx)</button>
+                <button onclick="downloadAllReport('docx')">Documento Word (.docx)</button>
+            </div>
         </div>
     </div>
 
@@ -179,8 +243,12 @@
     </div>
 
     <div class="filter-area">
-        <input type="text" class="search-input" placeholder="Buscar por nombre, correo o ciudad..."
-            oninput="filterTable(this.value)">
+        <input type="text" class="search-input" id="searchClient" placeholder="Buscar por nombre, correo..."
+            oninput="applyFilters()">
+        <button class="btn-download" style="background: var(--bg-light); border-color: var(--border); border-radius: 14px; padding: 0.85rem 1.5rem;" onclick="openFilterModal()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 3H2L10 12.46V19L14 21V12.46L22 3Z"></path></svg>
+            Más filtros
+        </button>
     </div>
 
     <div class="table-container">
@@ -189,95 +257,423 @@
                 <tr>
                     <th>Cliente</th>
                     <th>Ciudad / Estado</th>
+                    <th>Teléfono</th>
                     <th>Pedidos</th>
                     <th>Total gastado</th>
                     <th>Estado</th>
                     <th>Última actividad</th>
+                    <th>Reporte</th>
                 </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        <div class="client-info">
-                            <div class="avatar">RN</div>
-                            <div>
-                                <strong>Ronaldo Nazario</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">ronaldo@gmail.com</span>
-                            </div>
-                        </div>
-                    </td>
-                    <td>México, CDMX</td>
-                    <td>12</td>
-                    <td><strong>$24,500.00</strong></td>
-                    <td><span class="status-pill active">Activo</span></td>
-                    <td>Hoy, 10:30 AM</td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="client-info">
-                            <div class="avatar">JH</div>
-                            <div>
-                                <strong>Javier Hernández</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">chicharito@gmail.com</span>
-                            </div>
-                        </div>
-                    </td>
-                    <td>Guadalajara, JAL</td>
-                    <td>8</td>
-                    <td><strong>$15,200.00</strong></td>
-                    <td><span class="status-pill active">Activo</span></td>
-                    <td>Ayer, 04:15 PM</td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="client-info">
-                            <div class="avatar">BM</div>
-                            <div>
-                                <strong>Bepe Morales</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">bepe@gmail.com</span>
-                            </div>
-                        </div>
-                    </td>
-                    <td>Monterrey, NL</td>
-                    <td>3</td>
-                    <td><strong>$4,100.00</strong></td>
-                    <td><span class="status-pill active">Activo</span></td>
-                    <td>Hace 3 días</td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="client-info">
-                            <div class="avatar">SM</div>
-                            <div>
-                                <strong>Santiago Muñoz</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">santi@macuin.com</span>
-                            </div>
-                        </div>
-                    </td>
-                    <td>Puebla, PUE</td>
-                    <td>1</td>
-                    <td><strong>$850.00</strong></td>
-                    <td><span class="status-pill active">Activo</span></td>
-                    <td>Hace 2 semanas</td>
-                </tr>
+            <tbody id="clients-tbody">
+                <!-- Data populated dynamically via JS -->
             </tbody>
         </table>
     </div>
 </div>
 
 <script>
-    function filterTable(val) {
-        const query = val.toLowerCase();
-        const rows = document.querySelectorAll('#clientsTable tbody tr');
+    function toggleDownloadMenu() {
+        document.getElementById("downloadMenu").classList.toggle("show-dropdown");
+    }
 
-        rows.forEach(row => {
-            const text = row.innerText.toLowerCase();
-            row.style.display = text.includes(query) ? '' : 'none';
+    // Cerrar el menú si se hace clic fuera
+    window.onclick = function(event) {
+        if (!event.target.closest('.download-dropdown')) {
+            const dropdowns = document.getElementsByClassName("dropdown-content");
+            for (let i = 0; i < dropdowns.length; i++) {
+                const openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show-dropdown')) {
+                    openDropdown.classList.remove('show-dropdown');
+                }
+            }
+        }
+    }
+
+    // Datos globales para descargas
+    let allClientData = [];
+    let allClientStats = {};
+
+    function buildRowData(clientes, clientStats) {
+        const dtFmt = new Intl.DateTimeFormat('es-MX', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        return clientes.map(c => {
+            const stats = clientStats[c.nombre] || { orders: 0, total: 0, lastActivity: null };
+            return {
+                nombre: c.nombre,
+                email: c.email,
+                estadoCiudad: c.estado_ciudad || 'N/A',
+                telefono: c.telefono || 'N/A',
+                orders: stats.orders,
+                total: stats.total,
+                isActive: c.is_active,
+                lastAct: stats.lastActivity ? dtFmt.format(stats.lastActivity) : 'Sin compras'
+            };
         });
     }
 
-    // Animación de entrada
+    async function generatePDF(rows, filename, title) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+        const pageW = doc.internal.pageSize.getWidth();
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+        
+        const logoUrl = 'https://res.cloudinary.com/dpvm2gro2/image/upload/v1772562917/1_kj2lq7.png';
+
+        try {
+            // Fondo de cabecera profesional (Negro Oxigenado / Dark Navy)
+            doc.setFillColor(10, 10, 31);
+            doc.rect(0, 0, pageW, 25, 'F');
+
+            // Cargar Logo desde URL
+            const imgRes = await fetch(logoUrl);
+            const blob = await imgRes.blob();
+            const reader = new FileReader();
+            const logoBase64 = await new Promise((resolve) => {
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+            });
+
+            doc.addImage(logoBase64, 'PNG', 12, 4, 18, 18);
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            doc.text('MACUIN AUTOPARTES', 35, 12);
+            
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text(title.toUpperCase(), 35, 18);
+            
+            doc.setFontSize(8);
+            doc.text(`Generado: ${dateStr}`, pageW - 14, 15, { align: 'right' });
+
+            // Tabla de datos
+            const headers = [['Nombre', 'Email', 'Ciudad/Estado', 'Teléfono', 'Pedidos', 'Total gastado', 'Estado', 'Última actividad']];
+            const body = rows.map(r => [
+                r.nombre,
+                r.email,
+                r.estadoCiudad,
+                r.telefono,
+                String(r.orders),
+                `$${r.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                r.isActive ? 'Activo' : 'Inactivo',
+                r.lastAct
+            ]);
+
+            doc.autoTable({
+                head: headers,
+                body: body,
+                startY: 32,
+                margin: { left: 14, right: 14 },
+                styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
+                headStyles: { fillColor: [10, 10, 31], textColor: 255, fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [241, 245, 249] },
+                columnStyles: {
+                    4: { halign: 'center' },
+                    5: { halign: 'right' },
+                    6: { halign: 'center' }
+                },
+                didDrawPage: (data) => {
+                    const pageCount = doc.internal.getNumberOfPages();
+                    doc.setFontSize(7);
+                    doc.setTextColor(150);
+                    doc.text(
+                        `Pág. ${doc.internal.getCurrentPageInfo().pageNumber} de ${pageCount}  |  Macuin Autopartes — Documento oficial de administración`,
+                        pageW / 2, doc.internal.pageSize.getHeight() - 5, { align: 'center' }
+                    );
+                }
+            });
+
+            doc.save(filename);
+        } catch(e) {
+            console.error("Error cargando logo, generando PDF base:", e);
+            doc.save(filename);
+        }
+    }
+
+    function downloadAllReport(type = 'pdf') {
+        const dataToExport = window.filteredClients || allClientData;
+        if (!dataToExport.length) return;
+        const rows = buildRowData(dataToExport, allClientStats);
+        const dateKey = new Date().toISOString().substring(0, 10);
+        const filename = `reporte_clientes_macuin_${dateKey}`;
+        
+        if (type === 'pdf') {
+            generatePDF(rows, `${filename}.pdf`, 'Reporte general de clientes');
+        } else if (type === 'xlsx') {
+            generateExcel(rows, filename);
+        } else if (type === 'docx') {
+            generateWord(rows, filename, 'Reporte General de Clientes');
+        }
+    }
+
+    function generateExcel(rows, filename) {
+        const data = rows.map(r => ({
+            "Nombre Completo": r.nombre,
+            "Email": r.email,
+            "Ciudad/Estado": r.estadoCiudad,
+            "Teléfono": r.telefono,
+            "Pedidos": r.orders,
+            "Total Gastado (MXN)": r.total,
+            "Estado": r.isActive ? 'Activo' : 'Inactivo',
+            "Última Actividad": r.lastAct
+        }));
+        
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte Clientes");
+        XLSX.writeFile(workbook, `${filename}.xlsx`);
+    }
+
+    function generateWord(rows, filename, title) {
+        if (!window.docx) return;
+        const { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType } = window.docx;
+
+        const tableRows = [
+            new TableRow({
+                children: ["Nombre", "Email", "Pedidos", "Total", "Estado"].map(h => 
+                    new TableCell({ children: [new Paragraph({ text: h })] })
+                )
+            })
+        ];
+
+        rows.forEach(r => {
+            tableRows.push(new TableRow({
+                children: [
+                    new TableCell({ children: [new Paragraph({ text: String(r.nombre) })] }),
+                    new TableCell({ children: [new Paragraph({ text: String(r.email) })] }),
+                    new TableCell({ children: [new Paragraph({ text: String(r.orders) })] }),
+                    new TableCell({ children: [new Paragraph({ text: `$${r.total}` })] }),
+                    new TableCell({ children: [new Paragraph({ text: r.isActive ? 'Activo' : 'Inactivo' })] })
+                ]
+            }));
+        });
+
+        const doc = new Document({
+            sections: [{
+                children: [
+                    new Paragraph({ text: "MACUIN AUTOPARTES", heading: "Heading1" }),
+                    new Paragraph({ text: title, heading: "Heading2" }),
+                    new Paragraph({ text: `Fecha: ${new Date().toLocaleDateString()}` }),
+                    new Paragraph({ text: "" }),
+                    new Table({ 
+                        width: { size: 100, type: WidthType.PERCENTAGE }, 
+                        rows: tableRows,
+                        borders: {
+                            top: { style: "single", size: 1 },
+                            bottom: { style: "single", size: 1 },
+                            left: { style: "single", size: 1 },
+                            right: { style: "single", size: 1 }
+                        }
+                    })
+                ]
+            }]
+        });
+
+        Packer.toBlob(doc).then(blob => {
+            window.saveAs(blob, `${filename}.docx`);
+        });
+    }
+
+    function downloadSingleReport(nombre, type = 'pdf') {
+        const cliente = allClientData.find(c => c.nombre === nombre);
+        if (!cliente) return;
+        const rows = buildRowData([cliente], allClientStats);
+        const safeName = nombre.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const dateKey = new Date().toISOString().substring(0, 10);
+        const filename = `reporte_${safeName}_${dateKey}`;
+
+        if (type === 'pdf') {
+            generatePDF(rows, `${filename}.pdf`, `Reporte individual — ${nombre}`);
+        } else if (type === 'xlsx') {
+            generateExcel(rows, filename);
+        } else if (type === 'docx') {
+            generateWord(rows, filename, `Reporte Individual: ${nombre}`);
+        }
+    }
+
+    async function fetchClientes() {
+        try {
+            const reqUsers = fetch("http://127.0.0.1:8008/autenticacion/usuarios");
+            const reqOrders = fetch("http://127.0.0.1:8008/productos/pedidos/todos");
+
+            const [resUsers, resOrders] = await Promise.all([reqUsers, reqOrders]);
+            if (!resUsers.ok || !resOrders.ok) return;
+
+            const users = await resUsers.json();
+            const orders = await resOrders.json();
+            
+            const clientes = users.filter(u => u.role === "Cliente" || !u.role);
+            
+            // Map orders by client name
+            const clientStats = {};
+            orders.forEach(o => {
+                if (!clientStats[o.cliente]) {
+                    clientStats[o.cliente] = { orders: 0, total: 0, lastActivity: null };
+                }
+                clientStats[o.cliente].orders += 1;
+                clientStats[o.cliente].total += o.total;
+                
+                let dateStr = o.fecha;
+                if (!dateStr.endsWith("Z")) {
+                    dateStr += "Z";
+                }
+                const d = new Date(dateStr);
+                if (!clientStats[o.cliente].lastActivity || d > clientStats[o.cliente].lastActivity) {
+                    clientStats[o.cliente].lastActivity = d;
+                }
+            });
+
+            allClientData = clientes;
+            allClientStats = clientStats;
+            applyFilters();
+            
+            // Actualizar estadisticas en UI (basadas en datos totales o filtrados? Lo mantendré en totales para contexto general)
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function openFilterModal() {
+        // Obtener ciudades únicas
+        const cities = [...new Set(allClientData.map(c => c.estado_ciudad || 'N/A'))].filter(c => c !== 'N/A').sort();
+        let cityOptions = '<option value="">Todas las ciudades</option>';
+        cities.forEach(c => {
+            cityOptions += `<option value="${c}" ${document.getElementById('cityFilter_val')?.value === c ? 'selected' : ''}>${c}</option>`;
+        });
+
+        const modalHtml = `
+            <div style="text-align: left;">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem;">Segmenta tu base de datos de clientes por ubicación y actividad.</p>
+
+                <div class="field-group" style="margin-bottom: 2rem;">
+                    <label>Filtrar por ciudad o estado</label>
+                    <select id="m-city" class="field-select">
+                        ${cityOptions}
+                    </select>
+                </div>
+
+                <div class="detail-section-title">Segmentos Rápidos</div>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; margin-bottom: 2rem;">
+                    <button class="cat-btn" onclick="m_quickFilter('active')">Solo activos</button>
+                    <button class="cat-btn" onclick="m_quickFilter('inactive')">Solo inactivos</button>
+                    <button class="cat-btn" onclick="m_quickFilter('high_value')">Clientes High Value (> $10k)</button>
+                    <button class="cat-btn" style="border-color: var(--danger); color: var(--danger); background: transparent;" onclick="resetFilters()">Limpiar todo</button>
+                </div>
+
+                <input type="hidden" id="cityFilter_val" value="${document.getElementById('cityFilter_val')?.value || ''}">
+                <input type="hidden" id="segmentFilter_val" value="${document.getElementById('segmentFilter_val')?.value || ''}">
+            </div>
+        `;
+
+        showAppModal({
+            title: 'Filtros de clientes',
+            htmlContent: modalHtml,
+            icon: 'edit',
+            confirmText: 'Aplicar filtros',
+            onConfirm: () => {
+                document.getElementById('cityFilter_val').value = document.getElementById('m-city').value;
+                applyFilters();
+            }
+        });
+    }
+
+    function m_quickFilter(segment) {
+        document.getElementById('segmentFilter_val').value = segment;
+        applyFilters();
+        closeModal();
+    }
+
+    function resetFilters() {
+        document.getElementById('cityFilter_val').value = '';
+        document.getElementById('segmentFilter_val').value = '';
+        document.getElementById('searchClient').value = '';
+        applyFilters();
+        closeModal();
+    }
+
+    function applyFilters() {
+        const query = document.getElementById('searchClient').value.toLowerCase();
+        const cityQuery = document.getElementById('cityFilter_val')?.value.toLowerCase() || '';
+        const segment = document.getElementById('segmentFilter_val')?.value || '';
+        
+        const filtered = allClientData.filter(c => {
+            const matchesSearch = c.nombre.toLowerCase().includes(query) || c.email.toLowerCase().includes(query);
+            const matchesCity = !cityQuery || (c.estado_ciudad || '').toLowerCase().includes(cityQuery);
+            
+            let matchesSegment = true;
+            if (segment === 'active') matchesSegment = c.is_active;
+            else if (segment === 'inactive') matchesSegment = !c.is_active;
+            else if (segment === 'high_value') {
+                const stats = allClientStats[c.nombre] || { total: 0 };
+                matchesSegment = stats.total > 10000;
+            }
+
+            return matchesSearch && matchesCity && matchesSegment;
+        });
+
+        window.filteredClients = filtered;
+        renderClientsTable(filtered);
+    }
+
+    // Inyectamos placeholders al inicio
     document.addEventListener('DOMContentLoaded', () => {
+        if (!document.getElementById('cityFilter_val')) {
+            const div = document.createElement('div');
+            div.style.display = 'none';
+            div.innerHTML = `
+                <input type="hidden" id="cityFilter_val">
+                <input type="hidden" id="segmentFilter_val">
+            `;
+            document.body.appendChild(div);
+        }
+        fetchClientes();
+    });
+
+    function renderClientsTable(clientes) {
+        const tbody = document.querySelector('#clients-tbody');
+        tbody.innerHTML = '';
+
+        clientes.forEach(c => {
+            const initials = c.nombre.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+            const estadoCiudad = c.estado_ciudad && c.estado_ciudad !== "N/A" ? c.estado_ciudad : "N/A";
+            const telefono = c.telefono && c.telefono !== "N/A" ? c.telefono : "N/A";
+            const isActive = c.is_active;
+
+            const stats = allClientStats[c.nombre] || { orders: 0, total: 0, lastActivity: null };
+            const dtFormatter = new Intl.DateTimeFormat('es-MX', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const lastActStr = stats.lastActivity ? dtFormatter.format(stats.lastActivity) : "Sin compras";
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <div class="client-info">
+                        <div class="avatar">${initials}</div>
+                        <div>
+                            <strong>${c.nombre}</strong><br>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">${c.email}</span>
+                        </div>
+                    </div>
+                </td>
+                <td>${estadoCiudad}</td>
+                <td>${telefono}</td>
+                <td>${stats.orders}</td>
+                <td><strong>$${stats.total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong></td>
+                <td><span class="status-pill ${isActive ? 'active' : ''}" ${!isActive ? 'style="background:rgba(239, 68, 68, 0.1); color:var(--danger);"' : ''}>${isActive ? 'Activo' : 'Inactivo'}</span></td>
+                <td>${lastActStr}</td>
+                <td style="display: flex; gap: 0.25rem;">
+                    <button class="btn-download" style="padding: 0.3rem 0.6rem; font-size: 0.65rem;" onclick="downloadSingleReport('${c.nombre.replace(/'/g, "\\'")}', 'pdf')">PDF</button>
+                    <button class="btn-download" style="padding: 0.3rem 0.6rem; font-size: 0.65rem; background:#10B981;" onclick="downloadSingleReport('${c.nombre.replace(/'/g, "\\'")}', 'xlsx')">XL</button>
+                    <button class="btn-download" style="padding: 0.3rem 0.6rem; font-size: 0.65rem; background:#3B82F6;" onclick="downloadSingleReport('${c.nombre.replace(/'/g, "\\'")}', 'docx')">WD</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Animación de entrada y carga
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchClientes();
         gsap.from(".stat-mini-card", {
             y: 20,
             opacity: 0,
@@ -287,4 +683,9 @@
         });
     });
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 {% endblock %}

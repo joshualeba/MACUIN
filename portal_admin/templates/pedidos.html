@@ -397,6 +397,56 @@
         background: white;
         border-radius: 50%;
     }
+    .btn-download {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        background: var(--card-bg);
+        color: var(--text-main);
+        border: 1px solid var(--border);
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.3s;
+        font-size: 0.85rem;
+    }
+    .btn-download:hover { 
+        background: var(--bg-light);
+        border-color: var(--accent);
+        transform: translateY(-2px); 
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+    }
+
+    .download-dropdown { position: relative; display: inline-block; }
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: var(--card-bg);
+        min-width: 160px;
+        box-shadow: 0px 10px 20px 0px rgba(0,0,0,0.1);
+        z-index: 1000;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        margin-top: 5px;
+        overflow: hidden;
+    }
+    .dropdown-content button {
+        color: var(--text-main);
+        padding: 12px 16px;
+        display: block;
+        width: 100%;
+        border: none;
+        background: none;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .dropdown-content button:hover { background-color: var(--bg-light); color: var(--accent); }
+    .show-dropdown { display: block !important; }
 </style>
 {% endblock %}
 
@@ -404,14 +454,21 @@
 <div class="orders-header">
     <h1>Gestión de pedidos</h1>
     <div class="header-actions">
-        <button class="btn-download-all" onclick="downloadAllOrdersReport()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            Exportar reporte PDF
+        <button class="btn-download" style="background: var(--bg-light); border-color: var(--border);" onclick="openFilterModal()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 3H2L10 12.46V19L14 21V12.46L22 3Z"></path></svg>
+            Filtros avanzados
         </button>
+        <div class="download-dropdown">
+            <button class="btn-download" onclick="toggleDownloadMenu()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Descargar reporte
+            </button>
+            <div id="downloadMenu" class="dropdown-content">
+                <button onclick="downloadOrdersReport('pdf')">Documento PDF (.pdf)</button>
+                <button onclick="downloadOrdersReport('xlsx')">Hoja de cálculo (.xlsx)</button>
+                <button onclick="downloadOrdersReport('docx')">Documento Word (.docx)</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -469,50 +526,71 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <script>
-    let pedidos = [
-        {
-            id: '8294',
-            cliente: 'Armando Maldonado Morales',
-            email: 'armando.m@gmail.com',
-            fecha: '06 Mar 2026',
-            total: '1,948.80',
-            estado: 'PROCESANDO',
-            items: [
-                { nombre: 'Bujía láser de Iridio', cant: 4, sub: '1,000.00' },
-                { nombre: 'Válvula PCV', cant: 1, sub: '180.00' },
-                { nombre: 'Filtro de aceite sintético', cant: 2, sub: '500.00' }
-            ],
-            detalles_pago: 'Tarjeta de Crédito (Visa **** 4221)',
-            direccion: 'Blvd. Bernardo Quintana 111, Querétaro, Qro.'
-        },
-        {
-            id: '7164',
-            cliente: 'Armando Maldonado Morales',
-            email: 'armando.m@gmail.com',
-            fecha: '15 Ene 2026',
-            total: '1,200.00',
-            estado: 'ENTREGADO',
-            items: [
-                { nombre: 'Set de Faros LED Adicionales', cant: 1, sub: '1,200.00' }
-            ],
-            detalles_pago: 'PayPal',
-            direccion: 'Blvd. Bernardo Quintana 111, Querétaro, Qro.'
-        },
-        {
-            id: '6542',
-            cliente: 'Mercy Figueroa',
-            email: 'mercy.f@gmail.com',
-            fecha: '01 Mar 2026',
-            total: '4,500.00',
-            estado: 'ENVIADO',
-            items: [
-                { nombre: 'Módulo ABS de precisión', cant: 1, sub: '4,500.00' }
-            ],
-            detalles_pago: 'Transferencia Bancaria',
-            direccion: 'Av. Constituyentes 45, Querétaro, Qro.'
+    let pedidos = []; // Se poblará dinámicamente
+    let baseFetchUrl = "http://127.0.0.1:8008/productos/pedidos/todos";
+
+    async function loadOrders() {
+        try {
+            const res = await fetch(baseFetchUrl);
+            if (!res.ok) throw new Error("Error fetching");
+            const data = await res.json();
+            // Mapeo adaptativo desde el formato del backend OrdersResponse a la vista de admin
+            pedidos = data.map(o => {
+                let statusFront = 'PROCESANDO';
+                if (o.estado.toLowerCase().includes('camino') || o.estado.toLowerCase() === 'enviado') statusFront = 'ENVIADO';
+                if (o.estado.toLowerCase().includes('entregado') || o.estado.toLowerCase() === 'completado') statusFront = 'ENTREGADO';
+                
+                // Forzar parseo UTC 
+                const rawDate = String(o.fecha).endsWith('Z') ? o.fecha : o.fecha + 'Z';
+                
+                return {
+                    no_orden: o.no_orden, // Guardamos el original para la API
+                    id: o.no_orden.replace("ORD-", ""),
+                    cliente: o.cliente,
+                    email: o.cliente.toLowerCase().replace(" ", ".") + "@cliente.com", // Fallback (ya que en base no guardamos email por simplicidad del modelo)
+                    fecha: new Date(rawDate).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                    timestamp: new Date(rawDate).getTime(),
+                    total: parseFloat(o.total).toFixed(2),
+                    estado: statusFront,
+                    items: o.items.map(i => ({ nombre: i.product_nombre, cant: i.qty, sub: (i.qty * parseFloat(i.price)).toFixed(2) })),
+                    detalles_pago: 'Tarjeta Crédito/Débito', // Por defecto ya que siempre pagamos con tarjeta
+                    direccion: 'Dirección registrada en portal Macuin'
+                };
+            });
+            updateStatsBar();
+            window.allOrders = pedidos; // Referencia global
+            renderOrders(pedidos); // Inicialmente todos
+            
+            // Inyectamos placeholders ocultos para el estado de los filtros si no existen
+            if (!document.getElementById('dateStart_val')) {
+                const div = document.createElement('div');
+                div.style.display = 'none';
+                div.innerHTML = `
+                    <input type="hidden" id="dateStart_val">
+                    <input type="hidden" id="dateEnd_val">
+                    <input type="hidden" id="minAmount_val">
+                `;
+                document.body.appendChild(div);
+            }
+        } catch (e) {
+            console.error("No se pudo cargar pedidos:", e);
         }
-    ];
+    }
+
+    function updateStatsBar() {
+        const p = pedidos.filter(x => x.estado === 'PROCESANDO').length;
+        const c = pedidos.filter(x => x.estado === 'ENVIADO').length;
+        const e = pedidos.filter(x => x.estado === 'ENTREGADO').length;
+        
+        document.querySelectorAll('.q-stat-data strong')[0].innerText = p.toString().padStart(2, '0');
+        document.querySelectorAll('.q-stat-data strong')[1].innerText = c.toString().padStart(2, '0');
+        document.querySelectorAll('.q-stat-data strong')[2].innerText = e.toString().padStart(2, '0');
+    }
 
     function renderOrders(data) {
         const tbody = document.querySelector('#ordersTable tbody');
@@ -636,16 +714,41 @@
                     confirmText: 'Confirmar cambio',
                     onConfirm: () => {
                         const newPhase = document.getElementById('new-phase-val').value;
-                        p.estado = newPhase;
-                        renderOrders(pedidos);
+                        
+                        // Enviar update al backend para persistencia
+                        fetch(`http://127.0.0.1:8008/productos/pedidos/${p.no_orden}/estado`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ estado: newPhase })
+                        }).then(async res => {
+                            if(res.ok) {
+                                p.estado = newPhase;
+                                renderOrders(pedidos);
+                                updateStatsBar();
 
-                        setTimeout(() => {
+                                setTimeout(() => {
+                                    showAppModal({
+                                        title: '¡Fase actualizada!',
+                                        body: 'El estado del pedido ha sido guardado exitosamente: ' + (newPhase === 'PROCESANDO' ? 'En bodega' : (newPhase === 'ENVIADO' ? 'En camino' : 'Entregado')),
+                                        icon: 'help', confirmText: 'Excelente', singleButton: true
+                                    });
+                                }, 350);
+                            } else {
+                                const err = await res.json();
+                                showAppModal({
+                                    title: 'Error de servidor',
+                                    body: err.detail || 'No pudimos guardar el nuevo fase logístico en la base de datos.',
+                                    icon: 'alert', confirmText: 'Entendido', type: 'danger', singleButton: true
+                                });
+                            }
+                        }).catch(e => {
+                            console.error(e);
                             showAppModal({
-                                title: '¡Fase actualizada!',
-                                body: 'El pedido ahora se encuentra en estado: ' + (newPhase === 'PROCESANDO' ? 'En bodega' : (newPhase === 'ENVIADO' ? 'En camino' : 'Entregado')),
-                                icon: 'help', confirmText: 'Excelente', singleButton: true
+                                title: 'Error de conexión',
+                                body: 'No se pudo establecer contacto con la API central. Intenta más tarde.',
+                                icon: 'alert', confirmText: 'Cerrar', type: 'danger', singleButton: true
                             });
-                        }, 350);
+                        });
                     }
                 });
             }
@@ -658,61 +761,258 @@
         document.getElementById('new-phase-val').value = val;
     }
 
+    let currentStatus = 'todos';
+
     function filterByStatus(status) {
+        currentStatus = status;
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.toggle('active', btn.innerText.includes(status === 'todos' ? 'Todos' : (status === 'PROCESANDO' ? 'bodega' : (status === 'ENVIADO' ? 'camino' : (status === 'ENTREGADO' ? 'Completados' : '')))));
         });
+        applyFilters();
+    }
 
-        if (status === 'todos') {
-            renderOrders(pedidos);
-        } else {
-            const filtered = pedidos.filter(p => p.estado === status);
-            renderOrders(filtered);
+    function openFilterModal() {
+        const modalHtml = `
+            <div class="filter-modal-content" style="text-align: left;">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Ajusta los parámetros para segmentar el reporte de pedidos.</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="field-group">
+                        <label>Desde (Fecha)</label>
+                        <input type="date" id="m-dateStart" class="field-input" value="${document.getElementById('dateStart_val')?.value || ''}">
+                    </div>
+                    <div class="field-group">
+                        <label>Hasta (Fecha)</label>
+                        <input type="date" id="m-dateEnd" class="field-input" value="${document.getElementById('dateEnd_val')?.value || ''}">
+                    </div>
+                </div>
+
+                <div class="field-group" style="margin-bottom: 2rem;">
+                    <label>Inversión mínima (MXN)</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--text-muted);">$</span>
+                        <input type="number" id="m-minAmount" class="field-input" style="padding-left: 2rem;" placeholder="0.00" value="${document.getElementById('minAmount_val')?.value || ''}">
+                    </div>
+                </div>
+
+                <div class="detail-section-title">Accesos rápidos</div>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+                    <button class="cat-btn" onclick="setQuickDate('today')">Hoy</button>
+                    <button class="cat-btn" onclick="setQuickDate('week')">Esta semana</button>
+                    <button class="cat-btn" onclick="setQuickAmount(5000)">Inversión > $5k</button>
+                    <button class="cat-btn" style="border-color: var(--danger); color: var(--danger); background: transparent;" onclick="resetFilters()">Limpiar todo</button>
+                </div>
+
+                <!-- Hidden placeholders to keep track of state -->
+                <input type="hidden" id="dateStart_val" value="${document.getElementById('dateStart_val')?.value || ''}">
+                <input type="hidden" id="dateEnd_val" value="${document.getElementById('dateEnd_val')?.value || ''}">
+                <input type="hidden" id="minAmount_val" value="${document.getElementById('minAmount_val')?.value || ''}">
+            </div>
+        `;
+
+        showAppModal({
+            title: 'Filtros de pedidos',
+            htmlContent: modalHtml,
+            icon: 'edit',
+            confirmText: 'Aplicar segmentación',
+            onConfirm: () => {
+                document.getElementById('dateStart_val').value = document.getElementById('m-dateStart').value;
+                document.getElementById('dateEnd_val').value = document.getElementById('m-dateEnd').value;
+                document.getElementById('minAmount_val').value = document.getElementById('m-minAmount').value;
+                applyFilters();
+            }
+        });
+    }
+
+    function setQuickDate(type) {
+        const start = document.getElementById('m-dateStart');
+        const end = document.getElementById('m-dateEnd');
+        const now = new Date();
+        
+        if (type === 'today') {
+            const todayStr = now.toISOString().split('T')[0];
+            start.value = todayStr;
+            end.value = todayStr;
+        } else if (type === 'week') {
+            const lastWeek = new Date();
+            lastWeek.setDate(now.getDate() - 7);
+            start.value = lastWeek.toISOString().split('T')[0];
+            end.value = now.toISOString().split('T')[0];
         }
     }
 
-    // PDF ALL ORDERS
-    function downloadAllOrdersReport() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
+    function setQuickAmount(amt) {
+        document.getElementById('m-minAmount').value = amt;
+    }
 
-        doc.setFillColor(10, 10, 31);
-        doc.rect(0, 0, 210, 30, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(20);
-        doc.setFont("helvetica", "bold");
-        doc.text("Macuin Autopartes - Reporte de Pedidos", 15, 20);
+    function resetFilters() {
+        document.getElementById('m-dateStart').value = '';
+        document.getElementById('m-dateEnd').value = '';
+        document.getElementById('m-minAmount').value = '';
+        document.getElementById('dateStart_val').value = '';
+        document.getElementById('dateEnd_val').value = '';
+        document.getElementById('minAmount_val').value = '';
+        applyFilters();
+        closeModal();
+    }
 
-        doc.setTextColor(30, 41, 59);
-        doc.setFontSize(10);
-        doc.text("Fecha del reporte: " + new Date().toLocaleDateString(), 150, 45);
+    function applyFilters() {
+        // Obtenemos de los campos ocultos o de los del modal si están presentes (durante el onConfirm)
+        const startDate = document.getElementById('dateStart_val')?.value || '';
+        const endDate = document.getElementById('dateEnd_val')?.value || '';
+        const minAmount = parseFloat(document.getElementById('minAmount_val')?.value) || 0;
 
-        doc.setFontSize(14);
-        doc.text("Resumen General de Operaciones", 15, 60);
-
-        let y = 75;
-        doc.setFontSize(10);
-        pedidos.forEach(p => {
-            doc.setFont("helvetica", "bold");
-            doc.text("#ORD-" + p.id + " | " + p.cliente, 15, y);
-            doc.setFont("helvetica", "normal");
-            doc.text("Fecha: " + p.fecha + " | Total: $" + p.total + " MXN", 15, y + 5);
-            doc.text("Estado: " + (p.estado === 'PROCESANDO' ? 'En bodega' : (p.estado === 'ENVIADO' ? 'En camino' : 'Entregado')), 15, y + 10);
-            y += 20;
-
-            if (y > 270) { doc.addPage(); y = 20; }
+        const filtered = pedidos.filter(p => {
+            const matchesStatus = currentStatus === 'todos' || p.estado === currentStatus;
+            const matchesAmount = parseFloat(p.total) >= minAmount;
+            
+            const dStart = startDate ? new Date(startDate) : null;
+            const dEnd = endDate ? new Date(endDate) : null;
+            
+            const matchesDateStart = !dStart || p.timestamp >= dStart.getTime();
+            const matchesDateEnd = !dEnd || p.timestamp <= (dEnd.getTime() + 86400000);
+            
+            return matchesStatus && matchesAmount && matchesDateStart && matchesDateEnd;
         });
 
-        doc.save("Reporte_General_Pedidos_Macuin.pdf");
+        window.filteredOrders = filtered;
+        renderOrders(filtered);
+    }
 
-        showAppModal({
-            title: 'Reporte generado',
-            body: 'Se ha exportado el Reporte General de Pedidos con éxito.',
-            icon: 'help', confirmText: 'Cerrar', singleButton: true
+    function toggleDownloadMenu() {
+        document.getElementById("downloadMenu").classList.toggle("show-dropdown");
+    }
+
+    window.onclick = function(event) {
+        if (!event.target.closest('.download-dropdown')) {
+            const dropdowns = document.getElementsByClassName("dropdown-content");
+            for (let i = 0; i < dropdowns.length; i++) {
+                const openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show-dropdown')) {
+                    openDropdown.classList.remove('show-dropdown');
+                }
+            }
+        }
+    }
+
+    function downloadOrdersReport(type = 'pdf') {
+        const dataToExport = window.filteredOrders || pedidos;
+        if (dataToExport.length === 0) {
+            showAppModal({ title: 'No hay datos', body: 'No hay pedidos para exportar.', icon: 'error', confirmText: 'Cerrar', singleButton: true });
+            return;
+        }
+
+        const dateKey = new Date().toISOString().substring(0, 10);
+        const filename = `reporte_pedidos_macuin_${dateKey}`;
+
+        if (type === 'pdf') {
+            generateOrdersPDF(dataToExport, `${filename}.pdf`);
+        } else if (type === 'xlsx') {
+            generateOrdersExcel(dataToExport, filename);
+        } else if (type === 'docx') {
+            generateOrdersWord(dataToExport, filename);
+        }
+    }
+
+    function generateOrdersPDF(data, filename) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageW = 210;
+
+        doc.setFillColor(10, 10, 31);
+        doc.rect(0, 0, pageW, 25, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(16); doc.setFont("helvetica", "bold");
+        doc.text("MACUIN - REPORTE DE PEDIDOS", 15, 16);
+
+        const headers = [['Nº Orden', 'Cliente', 'Fecha', 'Monto', 'Estado']];
+        const body = data.map(o => [
+            `#ORD-${o.id}`,
+            o.cliente,
+            o.fecha,
+            `$${o.total}`,
+            o.estado === 'PROCESANDO' ? 'En bodega' : (o.estado === 'ENVIADO' ? 'En camino' : 'Entregado')
+        ]);
+
+        doc.autoTable({
+            head: headers,
+            body: body,
+            startY: 30,
+            headStyles: { fillColor: [10, 10, 31] },
+            alternateRowStyles: { fillColor: [240, 240, 240] }
+        });
+
+        doc.save(filename);
+    }
+
+    function generateOrdersExcel(data, filename) {
+        const exportData = data.map(o => ({
+            "Nº Orden": `#ORD-${o.id}`,
+            "Cliente": o.cliente,
+            "Email": o.email,
+            "Fecha": o.fecha,
+            "Total (MXN)": parseFloat(o.total),
+            "Estado": o.estado
+        }));
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Pedidos");
+        XLSX.writeFile(wb, `${filename}.xlsx`);
+    }
+
+    function generateOrdersWord(data, filename) {
+        if (!window.docx) {
+            console.error("Librería docx no cargada");
+            return;
+        }
+        const { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType } = window.docx;
+        const rows = [
+            new TableRow({
+                children: ["Nº Orden", "Cliente", "Fecha", "Monto", "Estado"].map(h => 
+                    new TableCell({ children: [new Paragraph({ text: h })] })
+                )
+            })
+        ];
+
+        data.forEach(o => {
+            rows.push(new TableRow({
+                children: [
+                    new TableCell({ children: [new Paragraph({ text: `#ORD-${o.id}` })] }),
+                    new TableCell({ children: [new Paragraph({ text: String(o.cliente) })] }),
+                    new TableCell({ children: [new Paragraph({ text: String(o.fecha) })] }),
+                    new TableCell({ children: [new Paragraph({ text: `$${o.total}` })] }),
+                    new TableCell({ children: [new Paragraph({ text: String(o.estado) })] })
+                ]
+            }));
+        });
+
+        const doc = new Document({
+            sections: [{
+                children: [
+                    new Paragraph({ text: "MACUIN AUTOPARTES", heading: "Heading1" }),
+                    new Paragraph({ text: "Reporte General de Pedidos", heading: "Heading2" }),
+                    new Paragraph({ text: `Fecha: ${new Date().toLocaleDateString()}` }),
+                    new Paragraph({ text: "" }),
+                    new Table({ 
+                        width: { size: 100, type: WidthType.PERCENTAGE }, 
+                        rows: rows,
+                        borders: {
+                            top: { style: "single", size: 1 },
+                            bottom: { style: "single", size: 1 },
+                            left: { style: "single", size: 1 },
+                            right: { style: "single", size: 1 }
+                        }
+                    })
+                ]
+            }]
+        });
+
+        Packer.toBlob(doc).then(blob => {
+            window.saveAs(blob, `${filename}.docx`);
         });
     }
 
     // Init
-    renderOrders(pedidos);
+    document.addEventListener('DOMContentLoaded', loadOrders);
 </script>
 {% endblock %}
