@@ -169,12 +169,12 @@
 
                 <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: #CBD5E1; font-weight: 500;">
                     <span>Subtotal</span>
-                    <span>$1680.00</span>
+                    <span>$<span id="pay-subtotal">0.00</span></span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: #CBD5E1; font-weight: 500;">
                     <span>IVA (16%)</span>
-                    <span>$268.80</span>
+                    <span>$<span id="pay-iva">0.00</span></span>
                 </div>
 
                 <div style="display: flex; justify-content: space-between; margin-bottom: 2rem; color: #10B981; font-weight: 600; text-transform: uppercase;">
@@ -186,7 +186,7 @@
 
                 <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 2rem;">
                     <span style="color: #94A3B8; font-size: 0.8rem; text-transform: uppercase;">Importe total</span>
-                    <span style="font-size: 2.5rem; font-weight: 800; margin: 0;">$1948.80</span>
+                    <span style="font-size: 2.5rem; font-weight: 800; margin: 0;">$<span id="pay-total">0.00</span></span>
                 </div>
 
                 <button onclick="document.getElementById('submit-btn').click()" class="btn btn-primary text-decoration-none" style="display: block; width: 100%; border: none; cursor: pointer; text-align: center; background: white; color: var(--primary); font-weight: 800; text-transform: uppercase; padding: 1rem; border-radius: 8px; transition: transform 0.2s;">Confirmar pedido &rarr;</button>
@@ -218,9 +218,28 @@
                 target.value = val !== '' ? val.match(/.{1,4}/g).join(' ') : '';
             });
         }
+
+        // Renderizar precios dinámicos desde el carrito global
+        const cart = window.getCart ? window.getCart() : [];
+        if (cart.length === 0) {
+            window.location.href = "{{ url('/carrito') }}";
+            return;
+        }
+
+        let subtotal = 0;
+        cart.forEach(item => {
+            subtotal += item.precio * item.qty;
+        });
+
+        const iva = subtotal * 0.16;
+        const total = subtotal + iva;
+
+        document.getElementById('pay-subtotal').innerText = subtotal.toFixed(2);
+        document.getElementById('pay-iva').innerText = iva.toFixed(2);
+        document.getElementById('pay-total').innerText = total.toFixed(2);
     });
 
-    function processPayment(e) {
+    async function processPayment(e) {
         e.preventDefault();
         
         const nombre = document.getElementById('receptor_nombre').value.trim();
@@ -275,16 +294,56 @@
             return;
         }
         
-        // Si todo está correcto, simular pago satisfactorio
-        window.showModal(
-            "¡Pedido confirmado!", 
-            "Hemos recibido tu pago exitosamente. En un momento te redirigiremos al historial de tus pedidos.", 
-            "success"
-        );
+        const cart = window.getCart();
+        const itemsToCheckout = cart.map(item => ({ id: item.id, qty: item.qty }));
         
-        setTimeout(() => {
-            window.location.href = "{{ url('/historial') }}";
-        }, 3500);
+        let nombreCliente = "Cliente Externo";
+        let userEmail = "";
+        try {
+            const userData = JSON.parse(localStorage.getItem('macuin_user'));
+            if (userData && userData.nombre) {
+                nombreCliente = userData.nombre;
+                userEmail = userData.email || "";
+            }
+        } catch (e) {}
+
+        try {
+            // Mostrar modal de procesamiento temporal
+            const btn = document.getElementById('submit-btn').nextElementSibling;
+            
+            const response = await fetch("http://127.0.0.1:8008/productos/pago", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    items: itemsToCheckout, 
+                    cliente: nombreCliente,
+                    email: userEmail,
+                    ciudad: ciudad,
+                    estado: estado
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                window.showModal("Error procesando pago", errorData.detail || "No pudimos procesar el inventario, es probable que algún producto ya se haya agotado.", "error");
+                return;
+            }
+
+            // Si todo está correcto, vaciamos carrito y mostramos éxito
+            window.saveCart([]);
+            window.showModal(
+                "¡Pedido confirmado!", 
+                "Hemos recibido tu pago exitosamente. En un momento te redirigiremos al historial de tus pedidos.", 
+                "success"
+            );
+            
+            setTimeout(() => {
+                window.location.href = "{{ url('/historial') }}";
+            }, 3500);
+
+        } catch (err) {
+            window.showModal("Error de conexión", "No se pudo contactar con los servidores de Macuin. Por favor, intenta de nuevo.", "error");
+        }
     }
 </script>
 @endsection

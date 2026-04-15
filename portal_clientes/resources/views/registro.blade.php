@@ -39,7 +39,7 @@
 
                 <div class="input-group">
                     <label>Correo electrónico</label>
-                    <input type="email" class="input-control" placeholder="Ej. bepe@gmail.com" required>
+                    <input type="email" class="input-control" placeholder="Ej. ejemplo@correo.com" required>
                 </div>
 
                 <div class="input-group">
@@ -137,20 +137,88 @@
     const confirmField = document.getElementById('reg-confirm');
     const nameField = document.getElementById('reg-nombre');
 
+    // Soporte para tecla Enter
+    form.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('submit-btn').click();
+        }
+    });
+
     form.addEventListener('submit', function(e) {
-        // Validar que el nombre no tenga números (por si se los saltan de alguna manera)
+        const email = document.querySelector('input[type="email"]').value.trim();
+        const password = passwordField.value;
+
+        if (!nameField.value.trim() || !email || !password || !confirmField.value) {
+            e.preventDefault();
+            window.showModal("Campos requeridos", "Por favor, completa todos los campos del formulario.", "error");
+            return;
+        }
+
+        // Validar correo
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(email)) {
+            e.preventDefault();
+            window.showModal("Correo inválido", "El formato del correo parece incorrecto. Por favor, revisa e intenta de nuevo.", "error");
+            return;
+        }
+
+        // Validar que el nombre no tenga números
         if (/[0-9]/.test(nameField.value)) {
             e.preventDefault();
-            window.showModal("Formato Inválido", "El nombre no puede contener números. Por favor, escríbelo correctamente.");
+            window.showModal("Formato Inválido", "El nombre no puede contener números. Por favor, escríbelo correctamente.", "error");
             return;
         }
 
         // Validar que ambas contraseñas coincidan
         if (passwordField.value !== confirmField.value) {
             e.preventDefault();
-            window.showModal("Verificación de Contraseña", "Las contraseñas no coinciden. Por favor, verifícalas y asegúrate de que sean iguales.");
+            window.showModal("Verificación de contraseña", "Las contraseñas no coinciden. Por favor, verifícalas y asegúrate de que sean iguales.", "error");
             return;
         }
+
+        e.preventDefault();
+        
+        const data = {
+            nombre: nameField.value,
+            email: document.querySelector('input[type="email"]').value,
+            password: passwordField.value
+        };
+
+        // Enviar a la API Central
+        fetch('http://localhost:8008/autenticacion/registro', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(async response => {
+            const result = await response.json();
+            if (response.ok) {
+                window.showModal("Registro exitoso", "Tu cuenta ha sido creada. Ahora puedes iniciar sesión.", "success");
+                setTimeout(() => {
+                    window.location.href = "{{ url('/login') }}";
+                }, 2000);
+            } else {
+                if (Array.isArray(result.detail)) {
+                    const errors = result.detail.map(err => err.msg).join('<br>');
+                    window.showModal("Datos no válidos", errors, "error");
+                } else {
+                    let errorTitle = "No se pudo registrar";
+                    if (result.detail && result.detail.includes("registrado")) errorTitle = "Correo ya registrado";
+                    
+                    window.showModal(errorTitle, result.detail || "Ocurrió un error inesperado.", "error");
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            window.showModal("Error de conexión", "No se pudo contactar con el servidor central.", "error");
+        })
+        .finally(() => {
+            if (window.completeLoader) window.completeLoader();
+        });
     });
 </script>
 @endsection
