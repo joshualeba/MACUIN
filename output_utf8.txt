@@ -1,0 +1,26 @@
+﻿api_central-1  | INFO:     Will watch for changes in these directories: ['/app']
+api_central-1  | INFO:     Uvicorn running on http://0.0.0.0:8008 (Press CTRL+C to quit)
+api_central-1  | INFO:     Started reloader process [1] using StatReload
+api_central-1  | INFO:     Started server process [8]
+api_central-1  | INFO:     Waiting for application startup.
+api_central-1  | INFO:     Application startup complete.
+api_central-1  | SEMBRANDO ADMINISTRADOR: joshualeba2109@gmail.com
+api_central-1  | ADMINISTRADOR SEMBRADO CON ├ëXITO
+api_central-1  | INFO:     172.19.0.1:34848 - "POST /auth/login?isAdmin=true HTTP/1.1" 200 OK
+api_central-1  | WARNING:  StatReload detected changes in 'routers/auth_router.py'. Reloading...
+api_central-1  | INFO:     Shutting down
+api_central-1  | INFO:     Waiting for application shutdown.
+api_central-1  | INFO:     Application shutdown complete.
+api_central-1  | INFO:     Finished server process [8]
+api_central-1  | INFO:     Started server process [41]
+api_central-1  | INFO:     Waiting for application startup.
+api_central-1  | INFO:     Application startup complete.
+api_central-1  | ADMINISTRADOR YA EXISTE: joshualeba2109@gmail.com
+api_central-1  | --- DEBUG LOGIN ---
+api_central-1  | Email recibido (crudo): 'joshualeba2109@gmail.com'
+api_central-1  | Email procesado (lower): 'joshualeba2109@gmail.com'
+api_central-1  | Realizando query en BD para: 'joshualeba2109@gmail.com'
+api_central-1  | Usuarios actuales en BD: ['joshualeba2109@gmail.com']
+api_central-1  | Usuario encontrado en BD, verificando contrase├▒a...
+api_central-1  | Login exitoso.
+api_central-1  | INFO:     172.19.0.1:54572 - "POST /auth/login?isAdmin=true HTTP/1.1" 200 OK

@@ -17,7 +17,6 @@ services:
     volumes:
       - ./portal_admin:/app
     environment:
-      - FLASK_DEBUG=1
       - API_URL=http://api_central:8008
 
   api_central:

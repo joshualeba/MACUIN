@@ -1,2 +1,6 @@
-flask
+fastapi
+uvicorn
+jinja2
 requests
+aiofiles
+python-multipart

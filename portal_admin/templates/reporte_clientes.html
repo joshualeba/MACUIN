@@ -226,19 +226,19 @@
     <div class="stats-grid">
         <div class="stat-mini-card">
             <h4>Total clientes</h4>
-            <div class="val">4</div>
+            <div class="val" id="stat-total-clients">-</div>
         </div>
         <div class="stat-mini-card">
-            <h4>Nuevos (Mes)</h4>
-            <div class="val">1</div>
+            <h4>Nuevos (mes)</h4>
+            <div class="val" id="stat-new-month">-</div>
         </div>
         <div class="stat-mini-card">
             <h4>Tickets promedio</h4>
-            <div class="val">$11,162.50</div>
+            <div class="val" id="stat-avg-ticket">-</div>
         </div>
         <div class="stat-mini-card">
             <h4>Clientes activos</h4>
-            <div class="val">100%</div>
+            <div class="val" id="stat-active-percent">-</div>
         </div>
     </div>
 
@@ -494,8 +494,13 @@
 
     async function fetchClientes() {
         try {
-            const reqUsers = fetch("http://127.0.0.1:8008/autenticacion/usuarios");
-            const reqOrders = fetch("http://127.0.0.1:8008/productos/pedidos/todos");
+            const token = localStorage.getItem('macuin_admin_token');
+            const reqUsers = fetch("http://127.0.0.1:8008/autenticacion/usuarios", {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const reqOrders = fetch("http://127.0.0.1:8008/productos/pedidos/todos", {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
 
             const [resUsers, resOrders] = await Promise.all([reqUsers, reqOrders]);
             if (!resUsers.ok || !resOrders.ok) return;
@@ -503,7 +508,9 @@
             const users = await resUsers.json();
             const orders = await resOrders.json();
             
-            const clientes = users.filter(u => u.role === "Cliente" || !u.role);
+            // Filtramos estrictamente: Solo usuarios con rol "Cliente"
+            // Se excluyen explícitamente Super admin y Soporte técnico
+            const clientes = users.filter(u => u.role === "Cliente");
             
             // Map orders by client name
             const clientStats = {};
@@ -528,10 +535,42 @@
             allClientStats = clientStats;
             applyFilters();
             
-            // Actualizar estadisticas en UI (basadas en datos totales o filtrados? Lo mantendré en totales para contexto general)
+            // Actualizar estadísticas dinámicas
+            updateDynamicStats(clientes, clientStats);
         } catch (e) {
             console.error(e);
         }
+    }
+
+    function updateDynamicStats(clientes, stats) {
+        const totalClients = clientes.length;
+        const activeClients = clientes.filter(c => c.is_active).length;
+        const activePercent = totalClients > 0 ? Math.round((activeClients / totalClients) * 100) : 0;
+        
+        // Calcular total gastado y promedio
+        let totalSpentAll = 0;
+        let totalOrdersAll = 0;
+        
+        Object.values(stats).forEach(s => {
+            totalSpentAll += s.total;
+            totalOrdersAll += s.orders;
+        });
+        
+        const avgTicket = totalOrdersAll > 0 ? (totalSpentAll / totalOrdersAll) : 0;
+        
+        // Para "Nuevos (mes)" usaremos un valor simulado basado en los que tienen pedidos recientes 
+        // ya que el modelo User no tiene fecha de creación.
+        const newThisMonth = clientes.filter(c => {
+            const s = stats[c.nombre];
+            if (!s || !s.lastActivity) return false;
+            const now = new Date();
+            return s.lastActivity.getMonth() === now.getMonth() && s.lastActivity.getFullYear() === now.getFullYear();
+        }).length;
+
+        document.getElementById('stat-total-clients').innerText = totalClients;
+        document.getElementById('stat-new-month').innerText = newThisMonth;
+        document.getElementById('stat-avg-ticket').innerText = `$${avgTicket.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('stat-active-percent').innerText = `${activePercent}%`;
     }
 
     function openFilterModal() {

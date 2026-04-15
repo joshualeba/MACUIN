@@ -37,11 +37,13 @@ async def get_inventory_report(db: Session = Depends(get_db), current_user: User
 async def get_clients_report(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Reporte 2: Análisis de clientes y consumo."""
     check_admin(current_user)
+    # Solo consideramos usuarios con rol de "Cliente"
     clients = db.query(User).filter(User.role == "Cliente").all()
     
     client_metrics = []
     for c in clients:
-        orders = db.query(Order).filter(Order.user_id == c.id).all()
+        # Buscamos órdenes por el nombre del cliente (ya que el modelo Order usa 'cliente')
+        orders = db.query(Order).filter(Order.cliente == c.nombre).all()
         total_spent = sum(o.total for o in orders)
         client_metrics.append({
             "nombre": c.nombre,

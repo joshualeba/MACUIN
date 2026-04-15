@@ -536,7 +536,12 @@
 
     async function loadOrders() {
         try {
-            const res = await fetch(baseFetchUrl);
+            const token = localStorage.getItem('macuin_admin_token');
+            const res = await fetch(baseFetchUrl, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (!res.ok) throw new Error("Error fetching");
             const data = await res.json();
             // Mapeo adaptativo desde el formato del backend OrdersResponse a la vista de admin
@@ -566,14 +571,15 @@
             window.allOrders = pedidos; // Referencia global
             renderOrders(pedidos); // Inicialmente todos
             
-            // Inyectamos placeholders ocultos para el estado de los filtros si no existen
+            // Inyectamos placeholders ocultos para el estado de los filtros si no existen (Mandatorio para applyFilters)
             if (!document.getElementById('dateStart_val')) {
                 const div = document.createElement('div');
+                div.id = 'filter-state-holders'; // Agregamos ID para evitar recreación
                 div.style.display = 'none';
                 div.innerHTML = `
-                    <input type="hidden" id="dateStart_val">
-                    <input type="hidden" id="dateEnd_val">
-                    <input type="hidden" id="minAmount_val">
+                    <input type="hidden" id="dateStart_val" value="">
+                    <input type="hidden" id="dateEnd_val" value="">
+                    <input type="hidden" id="minAmount_val" value="">
                 `;
                 document.body.appendChild(div);
             }
@@ -681,13 +687,16 @@
             </div>
         `;
 
+        const loggedAdmin = JSON.parse(localStorage.getItem('macuin_admin_user') || '{}');
+        const isSupport = loggedAdmin.role === 'Soporte técnico';
+
         showAppModal({
-            title: 'Expediente del pedido #ORD-' + p.id,
+            title: 'Expediente del pedido #ORD-' + p.no_orden,
             htmlContent: detailHtml,
             icon: 'help',
-            confirmText: 'Actualizar fase',
-            keepOpen: true,
-            onConfirm: () => {
+            confirmText: isSupport ? 'Cerrar vista' : 'Actualizar fase',
+            keepOpen: !isSupport,
+            onConfirm: isSupport ? null : () => {
                 const phaseHtml = `
                     <div class="phase-selector">
                         <div class="phase-option ${p.estado === 'PROCESANDO' ? 'active' : ''}" onclick="setPhase(this, 'PROCESANDO')">
@@ -715,10 +724,14 @@
                     onConfirm: () => {
                         const newPhase = document.getElementById('new-phase-val').value;
                         
+                        const token = localStorage.getItem('macuin_admin_token');
                         // Enviar update al backend para persistencia
                         fetch(`http://127.0.0.1:8008/productos/pedidos/${p.no_orden}/estado`, {
                             method: "PATCH",
-                            headers: { "Content-Type": "application/json" },
+                            headers: { 
+                                "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}`
+                            },
                             body: JSON.stringify({ estado: newPhase })
                         }).then(async res => {
                             if(res.ok) {
@@ -802,11 +815,6 @@
                     <button class="cat-btn" onclick="setQuickAmount(5000)">Inversión > $5k</button>
                     <button class="cat-btn" style="border-color: var(--danger); color: var(--danger); background: transparent;" onclick="resetFilters()">Limpiar todo</button>
                 </div>
-
-                <!-- Hidden placeholders to keep track of state -->
-                <input type="hidden" id="dateStart_val" value="${document.getElementById('dateStart_val')?.value || ''}">
-                <input type="hidden" id="dateEnd_val" value="${document.getElementById('dateEnd_val')?.value || ''}">
-                <input type="hidden" id="minAmount_val" value="${document.getElementById('minAmount_val')?.value || ''}">
             </div>
         `;
 
@@ -829,15 +837,18 @@
         const end = document.getElementById('m-dateEnd');
         const now = new Date();
         
+        // Formatear fecha local como YYYY-MM-DD
+        const offset = now.getTimezoneOffset();
+        const localNow = new Date(now.getTime() - (offset * 60 * 1000));
+        const todayStr = localNow.toISOString().split('T')[0];
+        
         if (type === 'today') {
-            const todayStr = now.toISOString().split('T')[0];
             start.value = todayStr;
             end.value = todayStr;
         } else if (type === 'week') {
-            const lastWeek = new Date();
-            lastWeek.setDate(now.getDate() - 7);
+            const lastWeek = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000) - (offset * 60 * 1000));
             start.value = lastWeek.toISOString().split('T')[0];
-            end.value = now.toISOString().split('T')[0];
+            end.value = todayStr;
         }
     }
 
@@ -866,11 +877,19 @@
             const matchesStatus = currentStatus === 'todos' || p.estado === currentStatus;
             const matchesAmount = parseFloat(p.total) >= minAmount;
             
+            // Usamos getTime() sobre fechas normalizadas a medianoche UTC para la comparación
+            const orderDate = new Date(p.timestamp);
+            orderDate.setUTCHours(0,0,0,0);
+            const orderTs = orderDate.getTime();
+
             const dStart = startDate ? new Date(startDate) : null;
-            const dEnd = endDate ? new Date(endDate) : null;
+            if(dStart) dStart.setUTCHours(0,0,0,0);
             
-            const matchesDateStart = !dStart || p.timestamp >= dStart.getTime();
-            const matchesDateEnd = !dEnd || p.timestamp <= (dEnd.getTime() + 86400000);
+            const dEnd = endDate ? new Date(endDate) : null;
+            if(dEnd) dEnd.setUTCHours(0,0,0,0);
+            
+            const matchesDateStart = !dStart || orderTs >= dStart.getTime();
+            const matchesDateEnd = !dEnd || orderTs <= dEnd.getTime();
             
             return matchesStatus && matchesAmount && matchesDateStart && matchesDateEnd;
         });

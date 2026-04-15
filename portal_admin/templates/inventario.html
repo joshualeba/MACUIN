@@ -111,24 +111,6 @@
     .image-preview-placeholder i { font-size: 2rem; }
     .image-preview-placeholder span { font-size: 0.75rem; font-weight: 700; }
 
-    /* Indicador de carga en botón */
-    .btn-loading {
-        pointer-events: none;
-        opacity: 0.8;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .btn-loading::after {
-        content: '';
-        width: 14px;
-        height: 14px;
-        border: 2px solid white;
-        border-top-color: transparent;
-        border-radius: 50%;
-        animation: spin-loader 0.6s linear infinite;
-    }
-    @keyframes spin-loader { to { transform: rotate(360deg); } }
 
     /* Category Filters */
     .cat-filters {
@@ -589,6 +571,10 @@
     function renderTable(data) {
         const tbody = document.querySelector('#inventoryTable tbody');
         tbody.innerHTML = '';
+        
+        const loggedUser = JSON.parse(localStorage.getItem('macuin_admin_user') || '{}');
+        const isSupport = loggedUser.role === 'Soporte técnico';
+
         data.forEach(p => {
             const stockClass = p.stock === 0 ? 'stock-none' : (p.stock < 5 ? 'stock-low' : 'stock-ok');
             const stateText = p.active ? 'Activo' : 'Deshabilitado';
@@ -610,13 +596,17 @@
                 <td><span style="font-weight: 800; color: ${stateColor}; font-size: 0.8rem; text-transform: uppercase;">${stateText}</span></td>
                 <td>
                     <div class="btn-group">
-                        <button class="btn-edit" onclick="openProductEditor(${p.id})">
+                        <button class="${isSupport ? 'btn-view' : 'btn-edit'}" onclick="openProductEditor(${p.id})">
+                            ${isSupport ? `
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            Consultar info` : `
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            Editar
+                            Editar`}
                         </button>
+                        ${!isSupport ? `
                         <button class="btn-delete" onclick="confirmDeleteProduct(${p.id}, '${p.nombre}')">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
+                        </button>` : ''}
                     </div>
                 </td>
             `;
@@ -633,8 +623,10 @@
             type: 'danger',
             onConfirm: async () => {
                 try {
+                    const token = localStorage.getItem('macuin_admin_token');
                     const res = await fetch('http://127.0.0.1:8008/productos/' + id, {
-                        method: 'DELETE'
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
                     });
                     if (res.ok) {
                         productos = productos.filter(p => p.id !== id);
@@ -653,6 +645,9 @@
     }
 
     function openProductEditor(id) {
+        const u = JSON.parse(localStorage.getItem('macuin_admin_user') || '{}');
+        const isReadOnly = u.role === 'Soporte técnico';
+        
         const p = productos.find(x => x.id === id);
 
         const editorHtml = `
@@ -745,18 +740,23 @@
 
                 // Validación de campos vacíos
                 if (!name || !price || !stock || !desc_breve || !desc_completa || !img) {
-                    showAppModal({
+                    showAppAlert({
                         title: 'Campos incompletos',
                         body: 'Atención: Debes rellenar todos los campos correctamente antes de guardar.',
                         icon: 'alert',
-                        confirmText: 'Entendido',
-                        singleButton: true,
                         type: 'danger'
                     });
                     return;
                 }
 
-                // Guardado por medio de la API central
+                // Mostrar indicador de carga
+                const confirmBtn = document.getElementById('btn-confirm');
+                if (confirmBtn) {
+                    confirmBtn.disabled = true;
+                    confirmBtn.classList.add('btn-loading');
+                    confirmBtn.innerHTML = 'Guardando cambios...';
+                }
+
                 const updatedData = {
                     nombre: name,
                     precio: price,
@@ -769,10 +769,12 @@
                 };
 
                 try {
+                    const token = localStorage.getItem('macuin_admin_token');
                     const res = await fetch('http://127.0.0.1:8008/productos/' + p.id, {
                         method: 'PUT',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify(updatedData)
                     });
@@ -795,6 +797,11 @@
                     }
                 } catch(e) {
                     console.error(e);
+                    // Restaurar botón en caso de error
+                    if (confirmBtn) {
+                        confirmBtn.disabled = false;
+                        confirmBtn.innerHTML = 'Guardar cambios';
+                    }
                     showAppModal({
                         title: 'Error de conexión',
                         body: 'No se pudo contactar a la API central para actualizar el producto.',
@@ -1104,20 +1111,20 @@
                 const file        = fileInput.files[0];
 
                 if (!nombre || !precio || !stock || !desc_breve || !desc_completa || !file) {
-                    showAppModal({
+                    showAppAlert({
                         title: 'Campos incompletos',
                         body: 'Debes rellenar todos los campos y seleccionar una imagen antes de guardar.',
-                        icon: 'alert', type: 'danger', confirmText: 'Entendido', singleButton: true
+                        icon: 'alert', type: 'danger'
                     });
                     return;
                 }
 
                 // Mostrar indicador de carga
-                const confirmBtn = document.querySelector('.modal-confirm-btn');
+                const confirmBtn = document.getElementById('btn-confirm');
                 if (confirmBtn) { 
                     confirmBtn.disabled = true; 
                     confirmBtn.classList.add('btn-loading');
-                    confirmBtn.innerHTML = 'Subiendo imagen...'; 
+                    confirmBtn.innerHTML = 'Procesando...'; 
                 }
 
                 try {
@@ -1125,9 +1132,13 @@
                     const imageUrl = await uploadToCloudinary(file);
 
                     // 2. Crear producto en la API
+                    const token = localStorage.getItem('macuin_admin_token');
                     const res = await fetch('http://127.0.0.1:8008/productos/', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
                         body: JSON.stringify({
                             nombre, precio, stock: parseInt(stock),
                             desc_breve, desc_completa,
@@ -1160,7 +1171,7 @@
                     if (confirmBtn) { 
                         confirmBtn.disabled = false; 
                         confirmBtn.classList.remove('btn-loading');
-                        confirmBtn.innerHTML = 'Guardar producto'; 
+                        confirmBtn.innerHTML = 'Agregar producto'; 
                     }
                 }
             }

@@ -325,7 +325,10 @@
                 window.location.href = "/";
             }
 
-            const response = await fetch("http://127.0.0.1:8008/autenticacion/usuarios");
+            const token = localStorage.getItem('macuin_admin_token');
+            const response = await fetch("http://127.0.0.1:8008/autenticacion/usuarios", {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (!response.ok) throw new Error("Network error");
             const data = await response.json();
             
@@ -380,12 +383,9 @@
                 const isThemselves = loggedAdmin && u.email === loggedAdmin.email;
                 const isPersonal = u.tipo === 'personal';
                 
-                // Lógica de ICONOS: 
-                // Soporte no edita Super Admins ni a sí mismo
-                const canEditStatus = isSuperAdmin && !isThemselves;
-                const isReadOnly = (loggedAdmin.role === 'Soporte técnico' && (isTargetSuper || isThemselves)) || isThemselves;
-
-                const canDelete = isSuperAdmin && !isTargetSuper && (loggedAdmin.role !== 'Soporte técnico');
+                const isSupport = loggedAdmin && loggedAdmin.role === 'Soporte técnico';
+                const isReadOnly = isSupport || isThemselves;
+                const canDelete = !isSupport && isSuperAdmin && !isTargetSuper && !isThemselves;
                 
                 tr.innerHTML = `
                     <td>
@@ -424,9 +424,10 @@
                 const tr = document.createElement('tr');
                 const isTargetSuper = u.email === 'joshualeba2109@gmail.com';
                 const isThemselves = loggedAdmin && u.email === loggedAdmin.email;
+                const isSupport = loggedAdmin && loggedAdmin.role === 'Soporte técnico';
                 
-                const isReadOnly = (loggedAdmin.role === 'Soporte técnico' && (isTargetSuper || isThemselves)) || isThemselves;
-                const canDelete = isSuperAdmin && !isTargetSuper && (loggedAdmin.role !== 'Soporte técnico');
+                const isReadOnly = isSupport || isThemselves;
+                const canDelete = !isSupport && isSuperAdmin && !isTargetSuper && !isThemselves;
 
                 tr.innerHTML = `
                     <td>
@@ -531,8 +532,8 @@
                 const role = document.getElementById('add-role').value;
 
                 if (!name || !email || !password) {
-                    showAppModal({
-                        title: 'Campos requeridos', body: 'Llena Nombre, correo y contraseña.', icon: 'alert', type: 'danger', singleButton: true, keepOpen: true
+                    showAppAlert({
+                        title: 'Campos requeridos', body: 'Llena Nombre, correo y contraseña.', icon: 'alert', type: 'danger'
                     });
                     return;
                 }
@@ -548,8 +549,12 @@
                     if(res.ok) {
                         const newU = await res.json();
                         // MANDATORIO: Asegurar el cambio de rol a Soporte técnico antes de continuar
+                        const token = localStorage.getItem('macuin_admin_token');
                         const patchRes = await fetch("http://127.0.0.1:8008/autenticacion/usuarios/" + newU.id, {
-                            method: "PATCH", headers: {"Content-Type": "application/json"},
+                            method: "PATCH", headers: {
+                                "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}`
+                            },
                             body: JSON.stringify({ role: "Soporte técnico" })
                         });
 
@@ -587,11 +592,10 @@
     function openUserEditor(id) {
         const u = usuarios.find(x => x.id === id);
         const isSuperAdmin = loggedAdmin && loggedAdmin.role === 'Super admin';
-        const isClient = u.rol === 'Cliente';
+        const isSupport = loggedAdmin && loggedAdmin.role === 'Soporte técnico';
         const isThemselves = loggedAdmin && u.email === loggedAdmin.email;
         
-        // El modo lectura se activa si no eres Super Admin o si eres Super Admin viendo tu propia cuenta
-        const isReadOnly = (loggedAdmin.role === 'Soporte técnico' && (u.rol === 'Super admin' || isThemselves)) || isThemselves;
+        const isReadOnly = isSupport || !isSuperAdmin || isThemselves;
         const canEnableEdit = isSuperAdmin && !isReadOnly;
 
         const editorHtml = `
@@ -658,8 +662,12 @@
                 const newRole = document.getElementById('edit-role').value;
 
                 try {
+                    const token = localStorage.getItem('macuin_admin_token');
                     const req = await fetch("http://127.0.0.1:8008/autenticacion/usuarios/" + u.id, {
-                        method: "PATCH", headers: {"Content-Type": "application/json"},
+                        method: "PATCH", headers: {
+                            "Content-Type": "application/json",
+                            'Authorization': `Bearer ${token}`
+                        },
                         body: JSON.stringify({ is_active: newStatus, role: newRole })
                     });
                     
@@ -700,7 +708,11 @@
             confirmText: 'Sí, eliminar',
             onConfirm: async () => {
                 try {
-                    const res = await fetch('http://127.0.0.1:8008/autenticacion/usuarios/' + id, { method: 'DELETE' });
+                    const token = localStorage.getItem('macuin_admin_token');
+                    const res = await fetch('http://127.0.0.1:8008/autenticacion/usuarios/' + id, { 
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
                     if (res.ok) {
                         closeModal();
                         setTimeout(() => {

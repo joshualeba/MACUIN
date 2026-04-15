@@ -309,8 +309,9 @@
         .then(async response => {
             const result = await response.json();
             if (response.ok) {
-                // Guardar datos del usuario para hacer dinámico el dashboard
+                // Guardar datos del usuario y el token para las peticiones a la API
                 localStorage.setItem('macuin_admin_user', JSON.stringify(result.user));
+                localStorage.setItem('macuin_admin_token', result.access_token);
                 // Redirigir al dashboard si las credenciales son válidas
                 window.location.href = "/dashboard";
             } else {

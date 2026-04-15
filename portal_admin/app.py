@@ -1,52 +1,57 @@
 import os
 import requests
-from flask import Flask, jsonify, render_template, request, redirect, url_for
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
-app = Flask(__name__)
-app.config['TEMPLATES_AUTO_RELOAD'] = True
+app = FastAPI()
 
-# Leemos la URL de la api desde la configuración del entorno (Docker)
-API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
+# Configuración de templates
+templates = Jinja2Templates(directory="templates")
 
-@app.route("/")
-def login():
-    return render_template("login.html")
+# URL de la API central (Docker)
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8008")
 
-@app.route("/dashboard")
-def dashboard():
-    return render_template("panel_control.html", active_page="panel")
+@app.get("/", response_class=HTMLResponse)
+async def login(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
 
-@app.route("/inventario")
-def inventario():
-    return render_template("inventario.html", active_page="inventario")
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    return templates.TemplateResponse("panel_control.html", {"request": request, "active_page": "panel"})
 
-@app.route("/pedidos")
-def pedidos():
-    return render_template("pedidos.html", active_page="pedidos")
+@app.get("/inventario", response_class=HTMLResponse)
+async def inventario(request: Request):
+    return templates.TemplateResponse("inventario.html", {"request": request, "active_page": "inventario"})
 
-@app.route("/perfil")
-def perfil():
-    return render_template("perfil.html", active_page="perfil")
+@app.get("/pedidos", response_class=HTMLResponse)
+async def pedidos(request: Request):
+    return templates.TemplateResponse("pedidos.html", {"request": request, "active_page": "pedidos"})
 
-@app.route("/usuarios")
-def usuarios():
-    # Nueva ruta para administrar personal y clientes
-    return render_template("usuarios.html", active_page="usuarios")
+@app.get("/perfil", response_class=HTMLResponse)
+async def perfil(request: Request):
+    return templates.TemplateResponse("perfil.html", {"request": request, "active_page": "perfil"})
 
-@app.route("/reporte_clientes")
-def reporte_clientes():
-    return render_template("reporte_clientes.html", active_page="reportes")
+@app.get("/usuarios", response_class=HTMLResponse)
+async def usuarios(request: Request):
+    return templates.TemplateResponse("usuarios.html", {"request": request, "active_page": "usuarios"})
 
-@app.route("/admin/ver_stock/<int:producto_id>")
-def revisar_stock(producto_id):
+@app.get("/reporte_clientes", response_class=HTMLResponse)
+async def reporte_clientes(request: Request):
+    return templates.TemplateResponse("reporte_clientes.html", {"request": request, "active_page": "reportes"})
+
+@app.get("/admin/ver_stock/{producto_id}")
+async def revisar_stock(producto_id: int):
     try:
         respuesta = requests.get(f"{API_URL}/api/stock/{producto_id}")
         if respuesta.status_code == 200:
-            return jsonify(respuesta.json())
+            return JSONResponse(content=respuesta.json())
         else:
-            return jsonify({"error": "No se pudo obtener el stock"}), respuesta.status_code
+            return JSONResponse(content={"error": "No se pudo obtener el stock"}, status_code=respuesta.status_code)
     except requests.exceptions.ConnectionError:
-        return jsonify({"error": "La API central no está disponible"}), 503
+        return JSONResponse(content={"error": "La API central no está disponible"}, status_code=503)
 
-if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=5000)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5000)

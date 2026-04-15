@@ -393,13 +393,12 @@
             <div class="user-profile-box">
                 <div class="profile-pill"
                     onclick="event.stopPropagation(); document.getElementById('uDrop').classList.toggle('show')">
-                    <div class="avatar-square user-avatar">AD</div>
+                    <div class="avatar-square user-avatar" id="nav-avatar">AD</div>
                     <div style="text-align: left;">
                         <span class="user-name"
-                            style="display: block; font-size: 0.85rem; font-weight: 800; color: var(--text-main);">Administrador General</span>
-                        <span
-                            style="display: block; font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Super
-                            Admin</span>
+                            style="display: block; font-size: 0.85rem; font-weight: 800; color: var(--text-main);">Cargando...</span>
+                        <span class="user-role"
+                            style="display: block; font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Rol</span>
                     </div>
                 </div>
                 <div class="user-dropdown" id="uDrop">
@@ -425,20 +424,35 @@
         if (adminData) {
             try {
                 const user = JSON.parse(adminData);
+                
+                // Actualizar textos de usuario
+                const nameEls = document.querySelectorAll('.user-name');
                 const emailEls = document.querySelectorAll('.user-email');
-                if (user && user.email) {
-                    emailEls.forEach(el => el.innerText = user.email);
+                const roleEls = document.querySelectorAll('.user-role');
+                const avatarEl = document.getElementById('nav-avatar');
+
+                if (user.nombre) nameEls.forEach(el => el.innerText = user.nombre);
+                if (user.email) emailEls.forEach(el => el.innerText = user.email);
+                if (user.role) roleEls.forEach(el => el.innerText = user.role);
+                
+                if (user.nombre && avatarEl) {
+                    const initials = user.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                    avatarEl.innerText = initials;
                 }
 
                 // Verificar que la cuenta sigue activa (solo para soporte técnico; super admin nunca se desactiva)
                 if (user && user.id && user.role !== 'Super admin') {
                     try {
-                        const res = await fetch('http://127.0.0.1:8008/autenticacion/users');
+                        const token = localStorage.getItem('macuin_admin_token');
+                        const res = await fetch('http://127.0.0.1:8008/autenticacion/usuarios', {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
                         if (res.ok) {
                             const allUsers = await res.json();
                             const freshUser = allUsers.find(u => u.id === user.id);
                             if (freshUser && !freshUser.is_active) {
                                 localStorage.removeItem('macuin_admin_user');
+                                localStorage.removeItem('macuin_admin_token');
                                 window.location.href = '/';
                             }
                         }
@@ -446,7 +460,7 @@
                         console.warn('No se pudo verificar el estado de cuenta admin.');
                     }
                 }
-            } catch (e) { }
+            } catch (e) { console.error(e); }
         }
     });
 
@@ -462,7 +476,11 @@
             icon: 'logout',
             confirmText: 'Cerrar sesión ahora',
             type: 'danger',
-            onConfirm: () => { window.location.href = '/'; }
+            onConfirm: () => { 
+                localStorage.removeItem('macuin_admin_user');
+                localStorage.removeItem('macuin_admin_token');
+                window.location.href = '/'; 
+            }
         });
     }
 </script>
