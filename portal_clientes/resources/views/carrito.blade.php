@@ -120,68 +120,10 @@
         <!-- Lista de artículos -->
         <div class="cart-items gsap-item">
             <div class="card" style="margin-bottom: 2rem;">
-                <h3 style="font-size: 1.1rem; margin-bottom: 1.5rem; color: var(--text-main);" id="cart-counter-title">Tus artículos (3)</h3>
+                <h3 style="font-size: 1.1rem; margin-bottom: 1.5rem; color: var(--text-main);" id="cart-counter-title">Tus artículos (0)</h3>
                 
                 <div id="cart-list">
-                    <!-- Producto 1 -->
-                    <div class="cart-item" data-id="13" data-price="250">
-                        <div class="item-info">
-                            <img src="https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803615/13_q15jp9.jpg" alt="Bujía láser de Iridio" class="item-img">
-                            <div>
-                                <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-main);">Bujía láser de Iridio</h4>
-                                <div style="color: var(--text-muted); font-size: 0.8rem;">Eléctrico</div>
-                                <button class="remove-btn" onclick="removeItem(this)">Quitar</button>
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
-                            <div class="qty-controls">
-                                <button class="qty-btn" onclick="updateQty(this, -1)">-</button>
-                                <input type="number" class="qty-input" value="4" readonly>
-                                <button class="qty-btn" onclick="updateQty(this, 1)">+</button>
-                            </div>
-                            <div class="item-price">$<span class="price-val">1000.00</span></div>
-                        </div>
-                    </div>
-
-                    <!-- Producto 2 -->
-                    <div class="cart-item" data-id="27" data-price="180">
-                        <div class="item-info">
-                            <img src="https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803599/27_hmbamh.jpg" alt="Válvula PCV" class="item-img">
-                            <div>
-                                <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-main);">Válvula PCV</h4>
-                                <div style="color: var(--text-muted); font-size: 0.8rem;">Motor</div>
-                                <button class="remove-btn" onclick="removeItem(this)">Quitar</button>
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
-                            <div class="qty-controls">
-                                <button class="qty-btn" onclick="updateQty(this, -1)">-</button>
-                                <input type="number" class="qty-input" value="1" readonly>
-                                <button class="qty-btn" onclick="updateQty(this, 1)">+</button>
-                            </div>
-                            <div class="item-price">$<span class="price-val">180.00</span></div>
-                        </div>
-                    </div>
-
-                    <!-- Producto 3 -->
-                    <div class="cart-item" data-id="4" data-price="250">
-                        <div class="item-info">
-                            <img src="https://res.cloudinary.com/dpvm2gro2/image/upload/v1772803583/4_rejzkf.jpg" alt="Filtro de aceite sintético" class="item-img">
-                            <div>
-                                <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-main);">Filtro de aceite sintético</h4>
-                                <div style="color: var(--text-muted); font-size: 0.8rem;">Motor</div>
-                                <button class="remove-btn" onclick="removeItem(this)">Quitar</button>
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
-                            <div class="qty-controls">
-                                <button class="qty-btn" onclick="updateQty(this, -1)">-</button>
-                                <input type="number" class="qty-input" value="2" readonly>
-                                <button class="qty-btn" onclick="updateQty(this, 1)">+</button>
-                            </div>
-                            <div class="item-price">$<span class="price-val">500.00</span></div>
-                        </div>
-                    </div>
+                    <!-- Los productos se renderizarán dinámicamente mediante Javascript -->
                 </div>
                 
                 <div id="empty-cart-msg" style="display: none; text-align: center; padding: 3rem 1rem;">
@@ -203,12 +145,12 @@
 
                 <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: #CBD5E1; font-weight: 500;">
                     <span>Subtotal</span>
-                    <span>$<span id="summary-subtotal">1680.00</span></span>
+                    <span>$<span id="summary-subtotal">0.00</span></span>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: #CBD5E1; font-weight: 500;">
                     <span>IVA (16%)</span>
-                    <span>$<span id="summary-iva">268.80</span></span>
+                    <span>$<span id="summary-iva">0.00</span></span>
                 </div>
 
                 <div style="display: flex; justify-content: space-between; margin-bottom: 2rem; color: #10B981; font-weight: 600; text-transform: uppercase;">
@@ -220,7 +162,7 @@
 
                 <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 2rem;">
                     <span style="color: #94A3B8; font-size: 0.8rem; text-transform: uppercase;">Importe total</span>
-                    <span style="font-size: 2.5rem; font-weight: 800; margin: 0;">$<span id="summary-total">1948.80</span></span>
+                    <span style="font-size: 2.5rem; font-weight: 800; margin: 0;">$<span id="summary-total">0.00</span></span>
                 </div>
 
                 <a href="{{ url('/pago') }}" id="btn-checkout" class="btn btn-primary text-decoration-none" style="display: block; text-align: center; background: white; color: var(--primary); font-weight: 800; text-transform: uppercase; padding: 1rem; border-radius: 8px; transition: transform 0.2s;">Proceder al pago &rarr;</a>
@@ -234,19 +176,62 @@
         return amount.toFixed(2);
     }
 
-    function calculateTotals() {
-        const items = document.querySelectorAll('.cart-item');
-        let subtotal = 0;
-        let count = 0;
-
-        items.forEach(item => {
-            const price = parseFloat(item.getAttribute('data-price'));
-            const qty = parseInt(item.querySelector('.qty-input').value);
-            const itemTotal = price * qty;
+    function renderCart() {
+        const cartList = document.getElementById('cart-list');
+        const cart = window.getCart ? window.getCart() : [];
+        
+        cartList.innerHTML = '';
+        
+        if (cart.length === 0) {
+            document.getElementById('cart-list').style.display = 'none';
+            document.getElementById('empty-cart-msg').style.display = 'block';
+            document.getElementById('cart-counter-title').innerText = `Tus artículos (0)`;
+            const btnCheckout = document.getElementById('btn-checkout');
+            btnCheckout.style.pointerEvents = 'none';
+            btnCheckout.style.opacity = '0.5';
             
-            item.querySelector('.price-val').innerText = formatMoney(itemTotal);
+            document.getElementById('summary-subtotal').innerText = "0.00";
+            document.getElementById('summary-iva').innerText = "0.00";
+            document.getElementById('summary-total').innerText = "0.00";
+            return;
+        }
+
+        document.getElementById('cart-list').style.display = 'block';
+        document.getElementById('empty-cart-msg').style.display = 'none';
+        
+        let subtotal = 0;
+        let totalItemsCount = cart.length;
+
+        document.getElementById('cart-counter-title').innerText = `Tus artículos (${totalItemsCount})`;
+
+        cart.forEach(item => {
+            let itemTotal = item.precio * item.qty;
             subtotal += itemTotal;
-            count += qty;
+            
+            // Capitalize category properly
+            let catFormatted = item.cat ? item.cat.charAt(0).toUpperCase() + item.cat.slice(1) : 'Categoría';
+
+            let html = `
+                <div class="cart-item" data-id="${item.id}" data-price="${item.precio}" data-max="${item.maxStock || 100}">
+                    <div class="item-info">
+                        <img src="${item.imagen}" alt="${item.nombre}" class="item-img">
+                        <div>
+                            <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-main);">${item.nombre}</h4>
+                            <div style="color: var(--text-muted); font-size: 0.8rem;">${catFormatted}</div>
+                            <button class="remove-btn" onclick="removeItemByButton(this, ${item.id})">Quitar</button>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
+                        <div class="qty-controls">
+                            <button class="qty-btn" onclick="updateItemQty(this, ${item.id}, -1)">-</button>
+                            <input type="number" class="qty-input" value="${item.qty}" readonly>
+                            <button class="qty-btn" onclick="updateItemQty(this, ${item.id}, 1)">+</button>
+                        </div>
+                        <div class="item-price">$<span class="price-val">${formatMoney(itemTotal)}</span></div>
+                    </div>
+                </div>
+            `;
+            cartList.insertAdjacentHTML('beforeend', html);
         });
 
         const iva = subtotal * 0.16;
@@ -256,32 +241,33 @@
         document.getElementById('summary-iva').innerText = formatMoney(iva);
         document.getElementById('summary-total').innerText = formatMoney(total);
         
-        const titleItems = Array.from(items).length;
-        document.getElementById('cart-counter-title').innerText = `Tus artículos (${titleItems})`;
+        const btnCheckout = document.getElementById('btn-checkout');
+        btnCheckout.style.pointerEvents = 'auto';
+        btnCheckout.style.opacity = '1';
+    }
 
-        if (titleItems === 0) {
-            document.getElementById('cart-list').style.display = 'none';
-            document.getElementById('empty-cart-msg').style.display = 'block';
-            const btnCheckout = document.getElementById('btn-checkout');
-            btnCheckout.style.pointerEvents = 'none';
-            btnCheckout.style.opacity = '0.5';
+    function updateItemQty(btn, id, change) {
+        let cart = window.getCart();
+        let index = cart.findIndex(i => i.id == id);
+        if (index !== -1) {
+            let maxStock = cart[index].maxStock || 100;
+            let newVal = cart[index].qty + change;
+            if (newVal >= 1 && newVal <= maxStock) {
+                cart[index].qty = newVal;
+                window.saveCart(cart);
+                renderCart();
+            } else if (newVal > maxStock) {
+                window.showModal("Límite de stock", `Lo sentimos, pero solo tenemos ${maxStock} unidades disponibles en nuestro almacén.`, "error");
+            }
         }
     }
 
-    function updateQty(btn, change) {
-        const input = btn.parentElement.querySelector('.qty-input');
-        let current = parseInt(input.value);
-        let newVal = current + change;
+    function removeItemByButton(btn, id) {
+        let cart = window.getCart();
+        cart = cart.filter(i => i.id != id);
+        window.saveCart(cart); // Update global cart and badge
         
-        if (newVal >= 1 && newVal <= 99) {
-            input.value = newVal;
-            calculateTotals();
-        }
-    }
-
-    function removeItem(btn) {
         const item = btn.closest('.cart-item');
-        
         // Animación suave de salida
         gsap.to(item, {
             opacity: 0,
@@ -293,14 +279,13 @@
             border: 'none',
             duration: 0.3,
             onComplete: () => {
-                item.remove();
-                calculateTotals();
+                renderCart();
             }
         });
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-        calculateTotals();
+        renderCart();
         
         if (typeof gsap !== 'undefined') {
             gsap.from(".page-title", { opacity: 0, y: -20, duration: 0.5, ease: "power2.out" });

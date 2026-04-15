@@ -34,36 +34,20 @@
             <form id="login-form" action="{{ url('/catalogo') }}" method="GET">
                 <div class="input-group">
                     <label>Correo electrónico</label>
-                    <input type="email" class="input-control" placeholder="bepe@gmail.com" required>
+                    <input type="email" class="input-control" placeholder="ejemplo@correo.com" required>
                 </div>
 
                 <div class="input-group">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                         <label style="margin: 0;">Contraseña</label>
-                        <a href="#" style="font-size: 0.75rem; color: var(--accent); text-decoration: none; font-weight: 600;">¿Olvidaste tu contraseña?</a>
                     </div>
                     <div class="password-wrapper">
-                        <input type="password" class="input-control password-input" id="login-password" placeholder="••••••••" required oninput="validatePassword(this.value)">
+                        <input type="password" class="input-control password-input" id="login-password" placeholder="••••••••" required>
                         <button type="button" class="eye-btn" onclick="togglePassword('login-password', this)">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </button>
                     </div>
 
-                    <!-- Password Hooks -->
-                    <div class="password-validator" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
-                        <div class="req-item" id="req-length" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #94A3B8; font-weight: 600;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            Mínimo 8-25 caracteres
-                        </div>
-                        <div class="req-item" id="req-upper" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #94A3B8; font-weight: 600;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            Mínimo una letra mayúscula
-                        </div>
-                        <div class="req-item" id="req-special" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #94A3B8; font-weight: 600;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            Mínimo un carácter especial (@, #, $, etc.)
-                        </div>
-                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-dark btn-block" style="margin-top: 1rem; border-radius: 999px;">Iniciar sesión &rarr;</button>
@@ -91,33 +75,65 @@
         }
     }
 
-    function validatePassword(pass) {
-        const hasLength = pass.length >= 8 && pass.length <= 25;
-        const hasUpper = /[A-Z]/.test(pass);
-        const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pass);
+    const loginForm = document.getElementById('login-form');
+    const passwordInput = document.getElementById('login-password');
 
-        const applyStyle = (id, valid) => {
-            const el = document.getElementById(id);
-            el.style.color = valid ? '#10B981' : '#94A3B8';
-            el.querySelector('svg').style.stroke = valid ? '#10B981' : 'currentColor';
-        };
-
-        applyStyle('req-length', hasLength);
-        applyStyle('req-upper', hasUpper);
-        applyStyle('req-special', hasSpecial);
-
-        return hasLength && hasUpper && hasSpecial;
-    }
-
-    document.getElementById('login-form').addEventListener('submit', function(e) {
-        const pass = document.getElementById('login-password').value;
-        if (!validatePassword(pass)) {
+    // Soporte para tecla Enter
+    loginForm.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
             e.preventDefault();
-            // Detener el loader que se activa globalmente en app.blade.php
-            if (window.completeLoader) window.completeLoader();
-            
-            window.showModal('Seguridad insuficiente', 'Tu contraseña debe cumplir con todos los requisitos de seguridad (mayúsculas, símbolos y longitud).', 'error');
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            submitBtn.click();
         }
+    });
+
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const email = document.querySelector('input[type="email"]').value.trim();
+        const password = passwordInput.value;
+
+        if (!email || !password) {
+            window.showModal('Campos requeridos', 'Por favor, completa todos los campos para iniciar sesión.', 'error');
+            return;
+        }
+
+        // Validación estricta de correo (e.g. dominios completos .com, .mx, etc.)
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(email)) {
+            window.showModal('Correo inválido', 'Por favor, ingresa un formato de correo electrónico válido (ejemplo: correo@gmail.com).', 'error');
+            return;
+        }
+
+        // Enviar a la API Central
+        fetch('http://localhost:8008/autenticacion/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        })
+        .then(async response => {
+            const result = await response.json();
+            if (response.ok) {
+                // Guardar los datos del usuario en localStorage para usarlos en el dashboard
+                localStorage.setItem('macuin_user', JSON.stringify(result.user));
+                window.location.href = "{{ url('/catalogo') }}";
+            } else {
+                let errorTitle = 'Acceso denegado';
+                if (result.detail && result.detail.includes('registrado')) errorTitle = 'Correo no registrado';
+                if (result.detail && result.detail.includes('Contraseña')) errorTitle = 'Contraseña incorrecta';
+                
+                window.showModal(errorTitle, result.detail || "Verifica tus credenciales.", "error");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            window.showModal("Error de conexión", "No se pudo contactar con el servidor central.", "error");
+        })
+        .finally(() => {
+            if (window.completeLoader) window.completeLoader();
+        });
     });
 </script>
 @endsection
