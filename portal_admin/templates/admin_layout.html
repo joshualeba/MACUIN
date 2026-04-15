@@ -393,18 +393,17 @@
             <div class="user-profile-box">
                 <div class="profile-pill"
                     onclick="event.stopPropagation(); document.getElementById('uDrop').classList.toggle('show')">
-                    <div class="avatar-square">BA</div>
+                    <div class="avatar-square user-avatar">AD</div>
                     <div style="text-align: left;">
-                        <span
-                            style="display: block; font-size: 0.85rem; font-weight: 800; color: var(--text-main);">Bepe
-                            Administrador</span>
+                        <span class="user-name"
+                            style="display: block; font-size: 0.85rem; font-weight: 800; color: var(--text-main);">Administrador General</span>
                         <span
                             style="display: block; font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Super
                             Admin</span>
                     </div>
                 </div>
                 <div class="user-dropdown" id="uDrop">
-                    <div class="drop-head"><strong>Bepe Administrador</strong><span>bepeadmin@macuin.com</span></div>
+                    <div class="drop-head"><strong class="user-name">Administrador General</strong><span class="user-email">admin@macuin.com</span></div>
                     <a href="/perfil" class="drop-item">Mi perfil</a>
                     <a href="/usuarios" class="drop-item">Administración</a>
                     <a href="javascript:void(0)" onclick="confirmAppLogout()" class="drop-item exit">Cerrar sesión</a>
@@ -421,6 +420,36 @@
 </main>
 
 <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        const adminData = localStorage.getItem('macuin_admin_user');
+        if (adminData) {
+            try {
+                const user = JSON.parse(adminData);
+                const emailEls = document.querySelectorAll('.user-email');
+                if (user && user.email) {
+                    emailEls.forEach(el => el.innerText = user.email);
+                }
+
+                // Verificar que la cuenta sigue activa (solo para soporte técnico; super admin nunca se desactiva)
+                if (user && user.id && user.role !== 'Super admin') {
+                    try {
+                        const res = await fetch('http://127.0.0.1:8008/autenticacion/users');
+                        if (res.ok) {
+                            const allUsers = await res.json();
+                            const freshUser = allUsers.find(u => u.id === user.id);
+                            if (freshUser && !freshUser.is_active) {
+                                localStorage.removeItem('macuin_admin_user');
+                                window.location.href = '/';
+                            }
+                        }
+                    } catch(e) {
+                        console.warn('No se pudo verificar el estado de cuenta admin.');
+                    }
+                }
+            } catch (e) { }
+        }
+    });
+
     document.addEventListener('click', () => {
         const d = document.getElementById('uDrop');
         if (d) d.classList.remove('show');

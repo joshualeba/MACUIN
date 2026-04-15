@@ -102,113 +102,45 @@
             transition: width 0.3s ease;
         }
 
-        /* Modal Enhanced */
+        /* Glass Modal Premium - Adaptive */
         #glass-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.75);
-            z-index: 10000;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(12px);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: rgba(0, 0, 0, 0.4); z-index: 10000;
+            justify-content: center; align-items: center; 
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            opacity: 0; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        #glass-modal.show {
-            opacity: 1;
-            display: flex;
-        }
-
+        #glass-modal.show { opacity: 1; display: flex; }
         .glass-modal-content {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 28px;
-            padding: 2.5rem;
-            width: 95%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-            text-align: center;
-            color: var(--text-main);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-            transform: translateY(30px);
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            position: relative;
+            border-radius: 24px; padding: 2.5rem; width: 92%; max-width: 420px;
+            text-align: center; color: var(--text-main); 
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            transform: scale(0.9) translateY(20px); transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-
-        #glass-modal.show .glass-modal-content {
-            transform: translateY(0);
-        }
-
+        #glass-modal.show .glass-modal-content { transform: scale(1) translateY(0); }
+        
         .modal-icon-wrapper {
-            width: 74px;
-            height: 74px;
-            background: var(--bg-light);
-            border-radius: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-            color: var(--accent);
-            border: 1px solid var(--border);
+            width: 74px; height: 74px; background: var(--bg-light);
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem; color: var(--accent); border: 1px solid var(--border);
         }
-
-        .modal-title {
-            font-size: 1.65rem;
-            font-weight: 800;
-            margin-bottom: 0.75rem;
-            color: var(--text-main);
-            letter-spacing: -0.5px;
+        .modal-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 0.75rem; color: var(--text-main); letter-spacing: -0.5px; }
+        .modal-body-text { font-size: 1rem; color: var(--text-muted); margin-bottom: 2rem; line-height: 1.6; }
+        
+        .modal-actions { display: flex; gap: 1rem; margin-top: 1rem; }
+        .modal-btn { 
+            flex: 1; padding: 0.9rem; border-radius: 14px; font-weight: 700;
+            cursor: pointer; border: none; transition: all 0.3s; font-size: 0.95rem;
         }
-
-        .modal-body-text {
-            font-size: 1rem;
-            color: var(--text-muted);
-            margin-bottom: 2rem;
-            line-height: 1.6;
-        }
-
-        .modal-form-area {
-            text-align: left;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2.5rem;
-        }
-
-        .modal-btn {
-            flex: 1;
-            padding: 1rem;
-            border-radius: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
-            font-size: 0.95rem;
-        }
-
-        .btn-cancel {
-            background: var(--bg-light);
-            color: var(--text-muted);
-            border: 1px solid var(--border);
-        }
-
-        .btn-confirm {
-            background: var(--accent);
-            color: white;
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
+        .btn-cancel { background: var(--bg-light); color: var(--text-main); border: 1px solid var(--border); }
+        .btn-cancel:hover { filter: brightness(0.95); }
+        body.dark-mode .btn-cancel:hover { filter: brightness(1.1); }
+        .btn-confirm { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+        .btn-confirm:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { filter: brightness(1.1); transform: translateY(-2px); }
 
         /* Custom scrollbar for modal */
         .glass-modal-content::-webkit-scrollbar {
@@ -222,6 +154,92 @@
         .glass-modal-content::-webkit-scrollbar-thumb {
             background: var(--border);
             border-radius: 10px;
+        }
+
+        /* Forms & Interactive Components */
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .field-group label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .field-input, .field-select, .field-area {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--bg-light);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            font-weight: 500;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .field-input:focus, .field-select:focus, .field-area:focus {
+            border-color: var(--accent);
+            background: var(--card-bg);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .cat-btn {
+            padding: 0.65rem 1.25rem;
+            border-radius: 99px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cat-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .cat-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+        }
+
+        .detail-section-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .detail-section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* Modal specific adjustments */
+        .modal-form-area {
+            margin-top: 1.5rem;
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -277,6 +295,13 @@
             } else {
                 dynamicBox.style.display = 'none';
             }
+            
+            const modalContent = document.querySelector('.glass-modal-content');
+            if(config.wide) {
+                modalContent.style.maxWidth = '750px';
+            } else {
+                modalContent.style.maxWidth = '420px';
+            }
 
             const confirmBtn = document.getElementById('btn-confirm');
             confirmBtn.innerText = config.confirmText || 'Aceptar';
@@ -319,7 +344,7 @@
             barEl.style.width = val + '%';
         }
 
-        window.addEventListener('load', () => {
+        document.addEventListener('DOMContentLoaded', () => {
             updateLoader(100);
             setTimeout(() => loader.classList.add('hidden'), 400);
         });
@@ -331,6 +356,41 @@
                 loader.classList.remove('hidden');
                 updateLoader(40);
                 setTimeout(() => window.location.href = link.href, 250);
+            }
+        });
+
+        // Lógica de perfil de administrador dinámico
+        document.addEventListener("DOMContentLoaded", () => {
+            const adminData = localStorage.getItem('macuin_admin_user');
+            if (adminData) {
+                try {
+                    const user = JSON.parse(adminData);
+                    const nameEls = document.querySelectorAll('.user-name');
+                    const avatarEls = document.querySelectorAll('.user-avatar');
+                    
+                    if (user && user.nombre) {
+                        nameEls.forEach(el => el.innerText = user.nombre);
+                        
+                        // Obtener iniciales (hasta 2) del nombre
+                        const parts = user.nombre.split(' ').filter(p => p.trim() !== '');
+                        let initials = '';
+                        if (parts.length >= 2) {
+                            initials = (parts[0][0] + parts[1][0]).toUpperCase();
+                        } else if (parts.length === 1) {
+                            initials = parts[0].substring(0, 2).toUpperCase();
+                        }
+                        
+                        avatarEls.forEach(el => el.innerText = initials);
+                    }
+                } catch (e) {
+                    console.error("Error leyendo datos del administrador", e);
+                }
+            } else {
+                // Prevenir mostrar info hardcodeada si no hay datos de sesión (o redirigir)
+                const nameEls = document.querySelectorAll('.user-name');
+                const avatarEls = document.querySelectorAll('.user-avatar');
+                nameEls.forEach(el => el.innerText = "Administrador");
+                avatarEls.forEach(el => el.innerText = "AD");
             }
         });
     </script>

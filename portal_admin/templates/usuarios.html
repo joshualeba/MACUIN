@@ -289,7 +289,8 @@
             clientes en el sistema.</p>
 
         <div class="tabs">
-            <div class="tab active" data-tab="personal" onclick="switchTab('personal')">Personal interno</div>
+            <div class="tab active" data-tab="todos" onclick="switchTab('todos')">Todos los usuarios</div>
+            <div class="tab" data-tab="personal" onclick="switchTab('personal')">Personal interno</div>
             <div class="tab" data-tab="clientes" onclick="switchTab('clientes')">Clientes registrados</div>
         </div>
 
@@ -309,51 +310,143 @@
 </div>
 
 <script>
-    let usuarios = [
-        { id: 1, nombre: 'Bepe Administrador', email: 'bepeadmin@macuin.com', rol: 'Super Admin', tipo: 'personal', estado: 'activo' },
-        { id: 2, nombre: 'Moisés Jorge Maldonado Morales', email: 'moises.maldonado@macuin.com', rol: 'Soporte Técnico', tipo: 'personal', estado: 'activo' },
-        { id: 3, nombre: 'Ronaldo Nazário', email: 'ronaldo@fenomeno.mx', empresa: 'Taller El Fenómeno', tipo: 'clientes', estado: 'activo' },
-        { id: 4, nombre: 'Pedro Sola', email: 'pedro.sola@autopartes.com', rol: 'Ventas', tipo: 'personal', estado: 'inactivo' },
-        { id: 5, nombre: 'Javier Hernández', email: 'javier.h@chicha14.com', empresa: 'Mecánica Goleador', tipo: 'clientes', estado: 'inactivo' }
-    ];
+    let usuarios = [];
+    let currentTab = 'todos';
 
-    let currentTab = 'personal';
+    // Info del usuario admin actual logueado
+    let loggedAdmin = null;
+
+    async function loadUsers() {
+        try {
+            const adminStr = localStorage.getItem('macuin_admin_user');
+            if (adminStr) {
+                loggedAdmin = JSON.parse(adminStr);
+            } else {
+                window.location.href = "/";
+            }
+
+            const response = await fetch("http://127.0.0.1:8008/autenticacion/usuarios");
+            if (!response.ok) throw new Error("Network error");
+            const data = await response.json();
+            
+            usuarios = data.map(u => ({
+                id: u.id,
+                nombre: u.nombre,
+                email: u.email,
+                rol: u.role,
+                estado_ciudad: u.estado_ciudad || 'N/A',
+                telefono: u.telefono || 'N/A',
+                tipo: (u.role === 'Super admin' || u.role === 'Soporte técnico') ? 'personal' : 'clientes',
+                estado: u.is_active ? 'activo' : 'inactivo'
+            }));
+
+            // Bloqueo de permisos para Soporte técnico
+            const isSoporte = loggedAdmin && loggedAdmin.role === 'Soporte técnico';
+            if (isSoporte) {
+                const btnAdd = document.querySelector('.btn-add');
+                if (btnAdd) btnAdd.style.display = 'none';
+            }
+
+            renderUsers();
+        } catch (e) {
+            console.error("Error al cargar usuarios:", e);
+        }
+    }
 
     function renderUsers() {
         const tbody = document.querySelector('#usersTable tbody');
         const head = document.querySelector('#tableHead');
         tbody.innerHTML = '';
 
-        const filtered = usuarios.filter(u => u.tipo === currentTab);
+        const isSuperAdmin = loggedAdmin && loggedAdmin.role === 'Super admin';
+        const filtered = currentTab === 'todos' ? usuarios : usuarios.filter(u => u.tipo === currentTab);
 
-        if (currentTab === 'personal') {
+        const editSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.121a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+        const viewSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+        const trashSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+
+        if (currentTab === 'todos') {
             head.innerHTML = `
                 <th>Usuario</th>
-                <th>Cargo / Rol</th>
+                <th>Rol</th>
+                <th>Región</th>
+                <th>Teléfono</th>
                 <th>Estado</th>
                 <th>Acciones</th>
             `;
             filtered.forEach(u => {
                 const tr = document.createElement('tr');
-                const isSuperAdmin = u.email === 'bepeadmin@macuin.com';
+                const isTargetSuper = u.email === 'joshualeba2109@gmail.com';
+                const isThemselves = loggedAdmin && u.email === loggedAdmin.email;
+                const isPersonal = u.tipo === 'personal';
+                
+                // Lógica de ICONOS: 
+                // Soporte no edita Super Admins ni a sí mismo
+                const canEditStatus = isSuperAdmin && !isThemselves;
+                const isReadOnly = (loggedAdmin.role === 'Soporte técnico' && (isTargetSuper || isThemselves)) || isThemselves;
+
+                const canDelete = isSuperAdmin && !isTargetSuper && (loggedAdmin.role !== 'Soporte técnico');
+                
                 tr.innerHTML = `
                     <td>
                         <div class="user-profile">
-                            <div class="user-avatar-sm">${u.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}</div>
+                            <div class="user-avatar-sm" style="${!isPersonal ? 'background: rgba(245,158,11,0.1); color:#F59E0B;' : ''}">${u.nombre.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase()}</div>
                             <div class="user-details">
                                 <span class="user-name">${u.nombre}</span>
                                 <span class="user-email">${u.email}</span>
                             </div>
                         </div>
                     </td>
-                    <td><span class="badge ${u.rol === 'Super Admin' ? 'badge-admin' : 'badge-staff'}">${u.rol}</span></td>
-                    <td><span style="color: ${u.estado === 'activo' ? 'var(--success)' : 'var(--danger)'}; font-weight: 800; font-size: 0.8rem; text-transform: uppercase;">${u.estado}</span></td>
+                    <td><span class="badge ${u.rol === 'Super admin' ? 'badge-admin' : (u.rol === 'Soporte técnico' ? 'badge-staff' : 'badge-client')}">${u.rol}</span></td>
+                    <td>${isPersonal ? '<span style="color:var(--text-muted);font-size:0.82rem;">—</span>' : `<span class="badge badge-client">${u.estado_ciudad}</span>`}</td>
+                    <td style="color:var(--text-main); font-size:0.85rem;">${u.telefono}</td>
+                    <td><span style="color: ${u.estado === 'activo' ? 'var(--success)' : 'var(--danger)'}; font-weight:800; font-size:0.8rem; text-transform:uppercase;">${u.estado}</span></td>
                     <td>
                         <div class="action-btns">
-                            ${!isSuperAdmin ? `
-                                <button class="btn-icon" onclick="openUserEditor(${u.id})" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.121a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                                <button class="btn-icon delete" onclick="deleteUser(${u.id})" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                            ` : '---'}
+                            <button class="btn-icon" onclick="openUserEditor(${u.id})" title="${isReadOnly ? 'Ver perfil' : 'Editar usuario'}">
+                                ${isReadOnly ? viewSvg : editSvg}
+                            </button>
+                            ${canDelete ? `<button class="btn-icon delete" onclick="deleteUser(${u.id})" title="Eliminar">${trashSvg}</button>` : ''}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else if (currentTab === 'personal') {
+            head.innerHTML = `
+                <th>Usuario</th>
+                <th>Cargo / Rol</th>
+                <th>Teléfono</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            `;
+            filtered.forEach(u => {
+                const tr = document.createElement('tr');
+                const isTargetSuper = u.email === 'joshualeba2109@gmail.com';
+                const isThemselves = loggedAdmin && u.email === loggedAdmin.email;
+                
+                const isReadOnly = (loggedAdmin.role === 'Soporte técnico' && (isTargetSuper || isThemselves)) || isThemselves;
+                const canDelete = isSuperAdmin && !isTargetSuper && (loggedAdmin.role !== 'Soporte técnico');
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="user-profile">
+                            <div class="user-avatar-sm">${u.nombre.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase()}</div>
+                            <div class="user-details">
+                                <span class="user-name">${u.nombre}</span>
+                                <span class="user-email">${u.email}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge ${u.rol === 'Super admin' ? 'badge-admin' : 'badge-staff'}">${u.rol}</span></td>
+                    <td style="color:var(--text-main); font-size:0.85rem;">${u.telefono}</td>
+                    <td><span style="color: ${u.estado === 'activo' ? 'var(--success)' : 'var(--danger)'}; font-weight:800; font-size:0.8rem; text-transform:uppercase;">${u.estado}</span></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn-icon" onclick="openUserEditor(${u.id})" title="${isReadOnly ? 'Ver perfil' : 'Editar usuario'}">
+                                ${isReadOnly ? viewSvg : editSvg}
+                            </button>
+                            ${canDelete ? `<button class="btn-icon delete" onclick="deleteUser(${u.id})" title="Eliminar">${trashSvg}</button>` : ''}
                         </div>
                     </td>
                 `;
@@ -361,29 +454,32 @@
             });
         } else {
             head.innerHTML = `
-                <th>Nombre del Cliente</th>
-                <th>Empresa Afiliada</th>
-                <th>Estatus Cuenta</th>
+                <th>Nombre del cliente</th>
+                <th>Estado / Ciudad</th>
+                <th>Teléfono</th>
+                <th>Estatus cuenta</th>
                 <th>Acciones</th>
             `;
             filtered.forEach(u => {
                 const tr = document.createElement('tr');
+                const canDelete = isSuperAdmin && (loggedAdmin.role !== 'Soporte técnico');
                 tr.innerHTML = `
                     <td>
                         <div class="user-profile">
-                            <div class="user-avatar-sm" style="background: rgba(245, 158, 11, 0.1); color: #F59E0B;">${u.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}</div>
+                            <div class="user-avatar-sm" style="background: rgba(245,158,11,0.1); color:#F59E0B;">${u.nombre.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase()}</div>
                             <div class="user-details">
                                 <span class="user-name">${u.nombre}</span>
                                 <span class="user-email">${u.email}</span>
                             </div>
                         </div>
                     </td>
-                    <td><span class="badge badge-client">${u.empresa}</span></td>
-                    <td><span style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; color: ${u.estado === 'activo' ? 'var(--success)' : 'var(--danger)'};">${u.estado === 'activo' ? 'Cuenta Verificada' : 'Acceso Restringido'}</span></td>
+                    <td><span class="badge badge-client">${u.estado_ciudad}</span></td>
+                    <td style="color: var(--text-main); font-size:0.85rem;">${u.telefono}</td>
+                    <td><span style="font-weight:800; font-size:0.8rem; text-transform:uppercase; color: ${u.estado === 'activo' ? 'var(--success)' : 'var(--danger)'};"> ${u.estado === 'activo' ? 'Cuenta verificada' : 'Acceso restringido'}</span></td>
                     <td>
                         <div class="action-btns">
-                            <button class="btn-icon" onclick="openUserEditor(${u.id})" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.121a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                            <button class="btn-icon delete" onclick="deleteUser(${u.id})" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                            <button class="btn-icon" onclick="openUserEditor(${u.id})" title="Editar usuario">${editSvg}</button>
+                            ${canDelete ? `<button class="btn-icon delete" onclick="deleteUser(${u.id})" title="Eliminar">${trashSvg}</button>` : ''}
                         </div>
                     </td>
                 `;
@@ -404,188 +500,225 @@
             <div class="edit-grid">
                 <div class="field-group full-width">
                     <label>Nombre completo</label>
-                    <input type="text" id="add-name" class="field-input" placeholder="Bepe Morales">
+                    <input type="text" id="add-name" class="field-input" placeholder="Ej. Carlos Martínez">
                 </div>
                 <div class="field-group full-width">
                     <label>Correo electrónico</label>
-                    <input type="email" id="add-email" class="field-input" placeholder="bepe@gmail.com">
+                    <input type="email" id="add-email" class="field-input" placeholder="ejemplo@correo.com">
                 </div>
-                <div class="field-group">
-                    <label>Tipo de acceso</label>
-                    <select id="add-type" class="field-select" onchange="toggleAddFields(this.value)">
-                        <option value="personal">Personal interno</option>
-                        <option value="clientes">Cliente externo</option>
-                    </select>
+                <div class="field-group full-width">
+                    <label>Contraseña</label>
+                    <input type="password" id="add-password" class="field-input" placeholder="Contraseña temporal">
                 </div>
-                <div class="field-group" id="role-field">
-                    <label>Cargo / Rol asignado</label>
-                    <select id="add-role" class="field-select">
-                        <option value="Ventas">Ventas</option>
-                        <option value="Soporte Técnico">Soporte Técnico</option>
-                        <option value="Logística">Logística</option>
-                        <option value="Almacén">Almacén</option>
-                        <option value="Administrador">Administrador</option>
-                    </select>
-                </div>
-                <div class="field-group" id="company-field" style="display:none;">
-                    <label>Empresa</label>
-                    <input type="text" id="add-company" class="field-input" placeholder="Nombre de la empresa">
+                <div class="field-group full-width">
+                    <label>Rol asignado</label>
+                    <input type="text" class="field-input" value="Soporte técnico" disabled style="opacity: 0.7; cursor: not-allowed;">
+                    <input type="hidden" id="add-role" value="Soporte técnico">
                 </div>
             </div>
         `;
 
         showAppModal({
-            title: 'Registrar nuevo usuario',
-            body: 'Ingresa los datos del nuevo integrante del ecosistema Macuin.',
+            title: 'Crear usuario desde Admin',
+            body: 'Ingresa los datos para registrar un integrante del portal.',
             htmlContent: addHtml,
             icon: 'help',
             confirmText: 'Crear usuario',
-            onConfirm: () => {
+            onConfirm: async () => {
                 const name = document.getElementById('add-name').value.trim();
                 const email = document.getElementById('add-email').value.trim();
-                const type = document.getElementById('add-type').value;
+                const password = document.getElementById('add-password').value;
                 const role = document.getElementById('add-role').value;
-                const company = document.getElementById('add-company').value;
 
-                if (!name || !email) {
+                if (!name || !email || !password) {
                     showAppModal({
-                        title: 'Campos requeridos',
-                        body: 'Atención: Debes ingresar al menos el nombre completo y el correo electrónico del usuario.',
-                        icon: 'alert', type: 'danger', singleButton: true
+                        title: 'Campos requeridos', body: 'Llena Nombre, correo y contraseña.', icon: 'alert', type: 'danger', singleButton: true, keepOpen: true
                     });
                     return;
                 }
 
-                const newUser = {
-                    id: Date.now(),
-                    nombre: name,
-                    email: email,
-                    tipo: type,
-                    estado: 'activo',
-                    rol: type === 'personal' ? role : '',
-                    empresa: type === 'clientes' ? company : ''
-                };
+                try {
+                    // Endpoint register standard corregido a español
+                    const res = await fetch("http://127.0.0.1:8008/autenticacion/registro", {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ nombre: name, email, password })
+                    });
+                    
+                    
+                    if(res.ok) {
+                        const newU = await res.json();
+                        // MANDATORIO: Asegurar el cambio de rol a Soporte técnico antes de continuar
+                        const patchRes = await fetch("http://127.0.0.1:8008/autenticacion/usuarios/" + newU.id, {
+                            method: "PATCH", headers: {"Content-Type": "application/json"},
+                            body: JSON.stringify({ role: "Soporte técnico" })
+                        });
 
-                usuarios.push(newUser);
-                renderUsers();
+                        if(!patchRes.ok) console.error("Error al asignar rol de soporte");
+                        
+                        // Cerramos el modal de carga/formulario solo si todo salió bien
+                        closeModal();
+                        
+                        setTimeout(() => {
+                            showAppModal({
+                                title: '¡Operación exitosa!', body: 'El usuario ' + name + ' ha sido registrado exitosamente como Soporte técnico.', icon: 'help', confirmText: 'Excelente', singleButton: true
+                            });
+                            loadUsers();
+                        }, 500);
+                    } else {
+                        const err = await res.json();
+                        let errorMsg = err.detail || 'Ocurrió un error inesperado al crear el usuario.';
+                        let errorTitle = 'Error de registro';
+                        
+                        if (errorMsg.includes("registrado")) {
+                            errorTitle = 'Correo en uso por un cliente';
+                            errorMsg = 'El correo electrónico que intentas asignar ya está siendo utilizado por otra cuenta en el sistema.';
+                        }
 
-                showAppModal({
-                    title: '¡Operación exitosa!',
-                    body: 'El usuario ' + name + ' ha sido registrado y tiene acceso inmediato.',
-                    icon: 'help', confirmText: 'Excelente', singleButton: true
-                });
+                        // Usamos keepOpen: true para evitar que el modal de error desaparezca
+                        showAppModal({
+                            title: errorTitle, body: errorMsg, icon: 'alert', type: 'danger', singleButton: true, keepOpen: true
+                        });
+                    }
+                } catch(e) {}
             }
         });
-    }
-
-    function toggleAddFields(val) {
-        document.getElementById('role-field').style.display = val === 'personal' ? 'flex' : 'none';
-        document.getElementById('company-field').style.display = val === 'clientes' ? 'flex' : 'none';
     }
 
     function openUserEditor(id) {
         const u = usuarios.find(x => x.id === id);
+        const isSuperAdmin = loggedAdmin && loggedAdmin.role === 'Super admin';
+        const isClient = u.rol === 'Cliente';
+        const isThemselves = loggedAdmin && u.email === loggedAdmin.email;
+        
+        // El modo lectura se activa si no eres Super Admin o si eres Super Admin viendo tu propia cuenta
+        const isReadOnly = (loggedAdmin.role === 'Soporte técnico' && (u.rol === 'Super admin' || isThemselves)) || isThemselves;
+        const canEnableEdit = isSuperAdmin && !isReadOnly;
 
         const editorHtml = `
-            <div class="edit-grid">
+            <div class="edit-grid" style="${isReadOnly ? 'opacity: 0.85;' : ''}">
                 <div class="field-group full-width">
                     <label>Nombre del usuario</label>
-                    <input type="text" id="edit-name" class="field-input" value="${u.nombre}" disabled>
+                    <input type="text" class="field-input" value="${u.nombre}" disabled style="${isReadOnly ? 'background: rgba(0,0,0,0.03);' : ''}">
                 </div>
                 <div class="field-group full-width">
                     <label>Email de acceso</label>
-                    <input type="email" id="edit-email" class="field-input" value="${u.email}" disabled>
+                    <input type="email" class="field-input" value="${u.email}" disabled style="${isReadOnly ? 'background: rgba(0,0,0,0.03);' : ''}">
                 </div>
-                ${u.tipo === 'personal' ? `
-                    <div class="field-group">
-                        <label>Rol asignado</label>
-                        <input type="text" id="edit-role" class="field-input" value="${u.rol}" disabled>
-                    </div>
-                ` : `
-                    <div class="field-group">
-                        <label>Empresa afiliada</label>
-                        <input type="text" id="edit-company" class="field-input" value="${u.empresa}" disabled>
-                    </div>
-                `}
+                <div class="field-group">
+                    <label>Rol asignado</label>
+                    <select id="edit-role" class="field-select" disabled>
+                        <option value="Super admin" ${u.rol === 'Super admin' ? 'selected' : ''}>Super Admin</option>
+                        <option value="Soporte técnico" ${u.rol === 'Soporte técnico' ? 'selected' : ''}>Soporte Técnico</option>
+                        <option value="Cliente" ${u.rol === 'Cliente' ? 'selected' : ''}>Cliente Externo</option>
+                    </select>
+                </div>
                 <div class="field-group">
                     <label>Estado de cuenta</label>
                     <select id="edit-status" class="field-select" disabled>
-                        <option value="activo" ${u.estado === 'activo' ? 'selected' : ''}>Activo</option>
-                        <option value="inactivo" ${u.estado === 'inactivo' ? 'selected' : ''}>Inactivo / Restringido</option>
+                        <option value="activo" ${u.estado === 'activo' ? 'selected' : ''}>Activo (Permitido)</option>
+                        <option value="inactivo" ${u.estado === 'inactivo' ? 'selected' : ''}>Inactivo (Restringido)</option>
                     </select>
                 </div>
             </div>
+            ${canEnableEdit ? `
             <div class="modal-actions-bar">
-                <button class="btn-add" id="enableEditBtn" onclick="enableUserFields()" style="background: var(--bg-light); color: var(--text-main); border: 1px solid var(--border);">
+                <button class="btn-add" id="enableEditBtn" onclick="enableUserFields(${isSuperAdmin && !isClient})" style="background: var(--bg-light); color: var(--text-main); border: 1px solid var(--border);">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    Habilitar edición
+                    Habilitar ajustes
                 </button>
-                <div id="saveMsg" style="display:none; font-size: 0.75rem; color: var(--accent); font-weight: 700;">CAMPOS ABIERTOS PARA EDICIÓN</div>
-            </div>
+                <div id="saveMsg" style="display:none; font-size: 0.75rem; color: var(--accent); font-weight: 700;">MODO EDICIÓN ACTIVADO</div>
+            </div>` : `
+            <div style="margin-top: 2rem; padding: 1rem; background: var(--bg-light); border-radius: 12px; border: 1px solid var(--border); text-align: center;">
+                <p style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin: 0;">
+                    <i class="bi bi-shield-lock" style="margin-right: 5px;"></i> Vista de seguridad: Solo lectura
+                </p>
+            </div>`}
         `;
 
         showAppModal({
-            title: 'Perfil de usuario',
+            title: isReadOnly ? 'Detalles de cuenta (Solo lectura)' : 'Perfil de usuario',
             htmlContent: editorHtml,
-            icon: 'help',
-            confirmText: 'Guardar cambios',
-            keepOpen: true,
-            onConfirm: () => {
-                const nameInput = document.getElementById('edit-name');
-                if (nameInput.disabled) {
-                    showAppModal({
-                        title: 'Modo lectura', body: 'Debes habilitar la edición primero para guardar cambios.', icon: 'alert', singleButton: true
-                    });
+            icon: isReadOnly ? 'help' : 'help',
+            confirmText: isReadOnly ? 'Entendido' : 'Guardar cambios',
+            keepOpen: !isReadOnly,
+            wide: true,
+            singleButton: isReadOnly,
+            onConfirm: async () => {
+                if (isReadOnly) {
+                    closeModal();
+                    return;
+                }
+                const statusInput = document.getElementById('edit-status');
+                if (statusInput.disabled) {
+                    showAppModal({ title: 'Modo lectura', body: 'Debes habilitar la edición primero.', icon: 'alert', singleButton: true });
                     return;
                 }
 
-                u.nombre = document.getElementById('edit-name').value;
-                u.email = document.getElementById('edit-email').value;
-                u.estado = document.getElementById('edit-status').value;
-                if (u.tipo === 'personal') u.rol = document.getElementById('edit-role').value;
-                else u.empresa = document.getElementById('edit-company').value;
+                const newStatus = statusInput.value === 'activo';
+                const newRole = document.getElementById('edit-role').value;
 
-                renderUsers();
-                closeModal();
-
-                setTimeout(() => {
-                    showAppModal({
-                        title: '¡Ajustes guardados!',
-                        body: 'La información del usuario ha sido actualizada en la base de datos.',
-                        icon: 'help', confirmText: 'Perfecto', singleButton: true
+                try {
+                    const req = await fetch("http://127.0.0.1:8008/autenticacion/usuarios/" + u.id, {
+                        method: "PATCH", headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({ is_active: newStatus, role: newRole })
                     });
-                }, 350);
+                    
+                    if(req.ok) {
+                        closeModal();
+                        setTimeout(() => {
+                            showAppModal({ title: '¡Ajustes guardados!', body: 'Actualizado exitosamente en la BD.', icon: 'help', confirmText: 'Perfecto', singleButton: true });
+                            loadUsers();
+                        }, 350);
+                    } else {
+                        const err = await req.json();
+                        showAppModal({ title: 'Error', body: err.detail, icon: 'alert', type: 'danger', singleButton: true });
+                    }
+                } catch(e) {}
             }
         });
     }
 
-    function enableUserFields() {
-        document.querySelectorAll('.field-input, .field-select').forEach(el => el.disabled = false);
+    function enableUserFields(canEditRole) {
+        document.getElementById('edit-status').disabled = false;
+        if (canEditRole) document.getElementById('edit-role').disabled = false;
+        
         document.getElementById('enableEditBtn').style.display = 'none';
         document.getElementById('saveMsg').style.display = 'block';
     }
 
     function deleteUser(id) {
+        if (!loggedAdmin || loggedAdmin.role !== 'Super admin') {
+            showAppModal({ title: 'Sin permisos', body: 'Solo el super administrador puede eliminar usuarios.', icon: 'alert', type: 'danger', singleButton: true });
+            return;
+        }
         const u = usuarios.find(x => x.id === id);
         showAppModal({
-            title: '¿Confirmar eliminación?',
-            body: `Estás a punto de dar de baja a ${u.nombre}. Esta acción revocará sus accesos de forma permanente.`,
-            icon: 'logout',
+            title: 'Eliminar usuario',
+            htmlContent: `<p style="text-align:center; color: var(--text-main); margin: 0.5rem 0 1rem;">¿Estás seguro de que deseas eliminar a <strong>${u.nombre}</strong>?<br><span style="color:var(--text-muted); font-size:0.85rem;">Esta acción no se puede deshacer.</span></p>`,
+            icon: 'alert',
             type: 'danger',
-            confirmText: 'Eliminar usuario',
-            onConfirm: () => {
-                usuarios = usuarios.filter(x => x.id !== id);
-                renderUsers();
-                showAppModal({
-                    title: 'Usuario eliminado',
-                    body: 'El registro ha sido removido exitosamente.',
-                    icon: 'help', confirmText: 'Cerrar', singleButton: true
-                });
+            confirmText: 'Sí, eliminar',
+            onConfirm: async () => {
+                try {
+                    const res = await fetch('http://127.0.0.1:8008/autenticacion/usuarios/' + id, { method: 'DELETE' });
+                    if (res.ok) {
+                        closeModal();
+                        setTimeout(() => {
+                            showAppModal({ title: 'Usuario eliminado', body: `${u.nombre} ha sido eliminado del sistema.`, icon: 'help', confirmText: 'Entendido', singleButton: true });
+                            loadUsers();
+                        }, 350);
+                    } else {
+                        const err = await res.json();
+                        showAppModal({ title: 'Error al eliminar', body: err.detail || 'No se pudo eliminar.', icon: 'alert', type: 'danger', singleButton: true });
+                    }
+                } catch(e) {
+                    showAppModal({ title: 'Error de conexión', body: 'No se pudo contactar el servidor.', icon: 'alert', type: 'danger', singleButton: true });
+                }
             }
         });
     }
 
     // Init
-    renderUsers();
+    loadUsers();
 </script>
 {% endblock %}
